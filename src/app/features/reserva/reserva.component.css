@@ -1,0 +1,15 @@
+.calendario {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendario .btn {
+  width: 100%;
+}
+
+/* muestra unas 6 horas y el resto con scroll */
+.lista-horas {
+  max-height: 13rem;
+  overflow-y: auto;
+}

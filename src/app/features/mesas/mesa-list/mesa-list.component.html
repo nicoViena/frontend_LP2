@@ -1,0 +1,37 @@
+<div class="container mt-4">
+    <div  class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="text-vimalu-primary">Gestion de Mesas</h2>
+        <a routerLink="/mesas/nuevo" class="btn btn-success">Nueva Mesa</a>
+    </div>
+    <table class="table table-hover shadow-sm">
+        <thead class="bg-vimalu-primary text-white">
+            <tr>
+                <th>Nombre</th>
+                <th>Personas por mesa</th>
+                <th>Mesas libres</th>
+                <th>Asignadas a salones</th>
+                <th>Salones</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (m of mesas; track m.idMesa){
+                <tr>
+                    <td>{{m.nombre}}</td>
+                    <td>{{m.capacidad}}</td>
+                    <td>{{m.cantidad}}</td>
+                    <td>{{mesasAsignadas(m)}}</td>
+                    <td>{{nombresSalones(m) || '-'}}</td>
+                    <td>
+                        <a [routerLink]="['/mesas/editar', m.idMesa]" class="btn btn-sm btn-warning me-2">Editar</a>
+                        <button (click)="eliminar(m)" class="btn btn-sm btn-danger">Eliminar</button>
+                    </td>
+                </tr>
+            } @empty {
+                <tr>
+                    <td colspan="6" class="text-center text-muted">No hay mesas registradas</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

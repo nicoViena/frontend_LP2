@@ -1,0 +1,80 @@
+/* You can add global styles to this file, and also import other style files */
+
+:root {
+  --color-primario: #244A35;
+  --color-primario-oscuro: #1B3828;
+  --color-acento: #C5A46D;
+  --color-texto-claro: #FFFFFF;
+
+  --color-texto-oscuro: #333333;
+  --color-fondo-claro: #f8f9fa;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--color-fondo-claro);
+  color: var(--color-texto-oscuro);
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex-grow: 1;
+  padding: 20px 40px;
+}
+
+
+.bg-vimalu-primary {
+  background-color: var(--color-primario) !important;
+}
+
+.text-vimalu-primary {
+  color: var(--color-primario) !important;
+}
+
+.text-vimalu-accent {
+  color: var(--color-acento) !important;
+}
+
+.btn-outline-accent {
+  --bs-btn-color: var(--color-acento);
+  --bs-btn-border-color: var(--color-acento);
+  --bs-btn-hover-color: var(--color-primario);
+  --bs-btn-hover-bg: var(--color-acento);
+  --bs-btn-hover-border-color: var(--color-acento);
+  --bs-btn-active-color: var(--color-primario);
+  --bs-btn-active-bg: var(--color-acento);
+  --bs-btn-active-border-color: var(--color-acento);
+  --bs-btn-disabled-color: var(--color-acento);
+  --bs-btn-disabled-bg: transparent;
+}
+
+/* Botones principales de Bootstrap con el verde de Vimalu */
+.btn-primary {
+  --bs-btn-bg: var(--color-primario);
+  --bs-btn-border-color: var(--color-primario);
+  --bs-btn-hover-bg: var(--color-primario-oscuro);
+  --bs-btn-hover-border-color: var(--color-primario-oscuro);
+  --bs-btn-active-bg: var(--color-primario-oscuro);
+  --bs-btn-active-border-color: var(--color-primario-oscuro);
+  --bs-btn-disabled-bg: var(--color-primario);
+  --bs-btn-disabled-border-color: var(--color-primario);
+  --bs-btn-focus-shadow-rgb: 197, 164, 109;
+}
+
+/* Opcion elegida en los desplegables (por ejemplo, la hora) */
+.dropdown-menu {
+  --bs-dropdown-link-active-bg: var(--color-primario);
+}
+
+/* Borde de los campos al escribir, en dorado en lugar de azul */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--color-acento);
+  box-shadow: 0 0 0 0.25rem rgba(197, 164, 109, 0.35);
+}

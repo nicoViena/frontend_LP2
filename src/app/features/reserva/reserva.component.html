@@ -1,0 +1,123 @@
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-vimalu-primary text-white">
+      <h4>Datos de tu Reserva</h4>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="siguiente()">
+        <div class="row">
+          <!-- COLUMNA IZQUIERDA: DATOS -->
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Nombre del cliente</label>
+              <input type="text" formControlName="nombre" class="form-control" maxlength="100">
+              @if (form.get('nombre')?.touched && form.get('nombre')?.invalid) {
+                <div class="form-text text-danger">El nombre es obligatorio</div>
+              }
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Salón</label>
+              <select formControlName="idSalon" class="form-select">
+                <option [ngValue]="null" disabled>Selecciona un salón</option>
+                @for (s of salones; track s.idSalon) {
+                  <option [ngValue]="s.idSalon" [disabled]="s.estado !== 'DISPONIBLE'">
+                    {{s.nombre}} {{s.estado !== 'DISPONIBLE' ? '(no disponible)' : ''}}
+                  </option>
+                }
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Cantidad de personas</label>
+              <input type="number" formControlName="cantPersonas" class="form-control" min="1">
+              @if (capacidadMesa) {
+                <div class="form-text">Máximo {{capacidadMesa}} personas por mesa en este salón.</div>
+              }
+              @if (form.get('cantPersonas')?.errors?.['max']) {
+                <div class="form-text text-danger">
+                  Para reservar para más de {{capacidadMesa}} personas, comuníquese con un administrador.
+                </div>
+              }
+              @if (form.get('cantPersonas')?.errors?.['min']) {
+                <div class="form-text text-danger">Debe ser al menos 1 persona.</div>
+              }
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Hora</label>
+              <!-- Dropdown de Bootstrap: el select nativo no permite limitar su altura -->
+              <div class="dropdown">
+                <button type="button" class="form-select text-start" data-bs-toggle="dropdown" aria-expanded="false"
+                  [class.is-invalid]="form.get('horaReserva')?.touched && form.get('horaReserva')?.invalid">
+                  {{form.value.horaReserva || 'Selecciona una hora'}}
+                </button>
+                <ul class="dropdown-menu w-100 lista-horas">
+                  @for (hora of horas; track hora) {
+                    <li>
+                      <button type="button" class="dropdown-item" [class.active]="hora === form.value.horaReserva"
+                        (click)="seleccionarHora(hora)">{{hora}}</button>
+                    </li>
+                  }
+                </ul>
+              </div>
+              <div class="form-text">Atención de 10:00 a 17:00.</div>
+              @if (form.get('horaReserva')?.errors?.['horaNoPermitida']) {
+                <div class="form-text text-danger">Elige una hora entre 10:00 y 17:00, en intervalos de 30 minutos</div>
+              } @else if (form.get('horaReserva')?.touched && form.get('horaReserva')?.invalid) {
+                <div class="form-text text-danger">La hora es obligatoria</div>
+              }
+            </div>
+          </div>
+
+          <!-- COLUMNA DERECHA: CALENDARIO -->
+          <div class="col-md-6">
+            <label class="form-label">Fecha</label>
+            @if (!salonSeleccionado) {
+              <p class="form-text">Selecciona un salón para ver sus fechas disponibles.</p>
+            }
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cambiarMes(-1)" [disabled]="!puedeRetroceder()">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              <strong class="text-capitalize">{{tituloMes()}}</strong>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cambiarMes(1)">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+            <div class="calendario">
+              @for (nombre of nombresDias; track nombre) {
+                <div class="text-center small fw-bold">{{nombre}}</div>
+              }
+              @for (dia of dias; track $index) {
+                @if (dia) {
+                  <button type="button" class="btn btn-sm" [ngClass]="claseDia(dia)"
+                    [disabled]="estadoDia(dia) !== 'disponible'" (click)="seleccionarFecha(dia)"
+                    [title]="estadoDia(dia) === 'disponible' ? disponibilidad[dia.fecha] + ' mesas libres' : ''">
+                    {{dia.dia}}
+                  </button>
+                } @else {
+                  <div></div>
+                }
+              }
+            </div>
+            <div class="d-flex gap-3 small mt-2">
+              <span><i class="bi bi-square-fill text-success"></i> Disponible</span>
+              <span><i class="bi bi-square-fill text-danger"></i> Sin mesas</span>
+              <span><i class="bi bi-square-fill text-secondary"></i> No seleccionable</span>
+            </div>
+            <div class="form-text"><i class="bi bi-info-circle"></i> Los lunes no hay atención</div>
+            @if (form.value.fechaReserva) {
+              <div class="form-text">Fecha elegida: <strong>{{form.value.fechaReserva}}</strong></div>
+            } @else if (form.get('fechaReserva')?.touched) {
+              <div class="form-text text-danger">Selecciona una fecha disponible</div>
+            }
+          </div>
+        </div>
+
+        <div class="mt-4 text-end">
+          <button type="submit" class="btn btn-primary">
+            Siguiente <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

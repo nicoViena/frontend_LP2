@@ -1,0 +1,43 @@
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-vimalu-primary text-white">
+      <h4>{{ id ? 'Editar' : 'Nuevo' }} Producto</h4>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="guardar()">
+        <div class="mb-3">
+          <label class="form-label">Nombre</label>
+          <input type="text" formControlName="nombre" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Descripción</label>
+          <textarea formControlName="descripcion" class="form-control"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Categoría</label>
+          <input type="text" formControlName="categoria" class="form-control" maxlength="20">
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Precio</label>
+            <input type="number" formControlName="precio" class="form-control">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Stock</label>
+            <input type="number" formControlName="stock" class="form-control">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Imagen</label>
+          <input type="file" (change)="onFileSelected($event)" class="form-control" accept="image/png, image/jpeg, image/gif">
+          <div class="form-text">PNG, JPG o GIF de hasta 1 MB.</div>
+        </div>
+
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary me-2" [disabled]="form.invalid || imagenInvalida || (!id && !fotoSeleccionada)">Guardar</button>
+          <a routerLink="/productos" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

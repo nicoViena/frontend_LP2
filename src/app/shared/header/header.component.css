@@ -1,0 +1,41 @@
+/* Colores del header de Hacienda Vimalu */
+.navbar-vimalu {
+  --verde-vimalu: var(--color-primario);
+  --crema-vimalu: #E9DCB8;
+  --dorado-vimalu: var(--color-acento);
+  background-color: var(--verde-vimalu);
+  border-bottom: 2px solid var(--dorado-vimalu);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Logo: el icono es oscuro, por eso va sobre un circulo crema */
+.logo-vimalu {
+  height: 42px;
+  width: 42px;
+  object-fit: contain;
+  background-color: var(--crema-vimalu);
+  border-radius: 50%;
+  padding: 3px;
+}
+
+.navbar-vimalu .nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  transition: color 0.3s ease;
+}
+
+/* El enlace activo usará el color crema */
+.navbar-vimalu .nav-link:hover,
+.navbar-vimalu .nav-link.active {
+  color: var(--crema-vimalu);
+}
+
+.navbar-vimalu .btn-outline-accent {
+  --bs-btn-color: var(--crema-vimalu);
+  --bs-btn-border-color: var(--dorado-vimalu);
+  --bs-btn-hover-color: var(--verde-vimalu);
+  --bs-btn-hover-bg: var(--dorado-vimalu);
+  --bs-btn-hover-border-color: var(--dorado-vimalu);
+  --bs-btn-active-color: var(--verde-vimalu);
+  --bs-btn-active-bg: var(--dorado-vimalu);
+  --bs-btn-active-border-color: var(--dorado-vimalu);
+}

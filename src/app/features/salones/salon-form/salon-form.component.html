@@ -1,0 +1,63 @@
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-vimalu-primary text-white">
+      <h4>{{ id ? 'Editar' : 'Nuevo' }} Salón</h4>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="guardar()">
+        <div class="mb-3">
+          <label class="form-label">Nombre</label>
+          <input type="text" formControlName="nombre" class="form-control" maxlength="20">
+          @if (form.get('nombre')?.touched && form.get('nombre')?.invalid) {
+            <div class="form-text text-danger">El nombre es obligatorio (máximo 20 caracteres)</div>
+          }
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Tipo de mesa</label>
+          <select formControlName="idMesa" class="form-select">
+            <option [ngValue]="null" disabled>Selecciona un tipo de mesa</option>
+            @for (m of mesas; track m.idMesa) {
+              <option [ngValue]="m.idMesa" [disabled]="disponibles(m) < 1">
+                {{m.nombre}} — {{m.capacidad}} personas por mesa — {{disponibles(m)}} disponibles
+              </option>
+            }
+          </select>
+          @if (mesas.length === 0) {
+            <div class="form-text text-danger">No hay tipos de mesa registrados. Primero registra mesas en Gestión de Mesas.</div>
+          }
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Cantidad de mesas</label>
+            <input type="number" formControlName="cantidad" class="form-control" min="1" step="1">
+            @if (mesaSeleccionada(); as mesa) {
+              <div class="form-text">Máximo {{disponibles(mesa)}} mesas de este tipo.</div>
+            }
+            @if (form.get('cantidad')?.errors?.['max']) {
+              <div class="form-text text-danger">La cantidad supera las mesas disponibles de este tipo</div>
+            } @else if (form.get('cantidad')?.touched && form.get('cantidad')?.invalid) {
+              <div class="form-text text-danger">Debe ser un número entero de al menos 1</div>
+            }
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Estado</label>
+            <select formControlName="estado" class="form-select">
+              <option value="DISPONIBLE">Disponible</option>
+              <option value="NO_DISPONIBLE">No disponible</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Capacidad total</label>
+          <input type="text" class="form-control" [value]="capacidadTotal() + ' personas'" disabled>
+          <div class="form-text">Se calcula como personas por mesa × cantidad de mesas.</div>
+        </div>
+
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary me-2" [disabled]="form.invalid">Guardar</button>
+          <a routerLink="/salones" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
