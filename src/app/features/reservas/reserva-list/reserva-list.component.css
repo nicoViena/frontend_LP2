@@ -1,0 +1,37 @@
+.lupa {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6E7470;
+}
+
+a.accion {
+  place-items: center;
+  vertical-align: middle;
+}
+
+.seccion {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #4C5651;
+}
+
+.dato {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.dato small {
+  display: block;
+  color: #6E7470;
+}
+
+.saldo {
+  background: #F6EDD0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 6px;
+}

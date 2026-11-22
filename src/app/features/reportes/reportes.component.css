@@ -1,0 +1,104 @@
+/* Pestañas */
+.pestanas {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid #ECE7DA;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.pestanas button {
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #4C5651;
+}
+
+.pestanas .activo {
+  background: var(--color-primario);
+  color: #fff;
+}
+
+/* Barras verticales (ventas) */
+.grafico {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 240px;
+  border-bottom: 1px solid #EFECE3;
+}
+
+.columna {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  font-size: 11px;
+  color: #6E7470;
+  min-width: 0;
+  text-align: center;
+}
+
+.barra {
+  width: 70%;
+  max-width: 40px;
+  background: var(--color-primario);
+  border-radius: 6px 6px 0 0;
+  margin: 2px 0 4px;
+}
+
+.barra.dorada {
+  background: var(--color-dorado);
+}
+
+/* Barras horizontales (top 5) */
+.barra-fondo {
+  background: #EFECE3;
+  border-radius: 6px;
+  height: 12px;
+}
+
+.barra-h {
+  background: var(--color-primario);
+  border-radius: 6px;
+  height: 100%;
+}
+
+/* Dona (estados) */
+.donut {
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+}
+
+.centro {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+.centro strong {
+  font-size: 30px;
+}
+
+.centro span {
+  color: #6E7470;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

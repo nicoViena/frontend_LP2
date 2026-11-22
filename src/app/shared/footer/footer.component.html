@@ -1,7 +1,18 @@
-<footer class="footer text-center">
-    <div class="container py-3">
+<footer class="footer">
+    <!-- en escritorio: derechos a la izquierda y redes a la derecha; en movil se apilan centrados -->
+    <div class="container py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
         <p class="text-white m-0">
             © {{autor.anio}} {{autor.nombre}} {{autor.apellido}}. Todos los derechos reservados
         </p>
+        <div class="redes d-flex align-items-center gap-3">
+            <span class="text-white">Síguenos</span>
+            <!-- noopener noreferrer: la nueva pestaña no puede acceder a esta pagina -->
+            <a href="https://www.facebook.com/profile.php?id=100077883236408" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <i class="bi bi-facebook"></i>
+            </a>
+            <a href="https://www.instagram.com/vimaluhacienda/?hl=es" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <i class="bi bi-instagram"></i>
+            </a>
+        </div>
     </div>
 </footer>

@@ -1,0 +1,33 @@
+.zona-imagen {
+  border: 2px dashed #E3DCC8;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.vista {
+  background: #F6EDD0;
+  border-radius: 12px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primario);
+  overflow: hidden;
+}
+
+.vista img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.zona-imagen label {
+  cursor: pointer;
+}
+
+.disponibilidad {
+  background: var(--color-crema);
+  border-radius: 10px;
+  padding: 10px 14px;
+}

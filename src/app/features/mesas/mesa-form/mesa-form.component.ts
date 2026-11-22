@@ -1,66 +1,61 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MesaNueva, SalonNuevo } from '../../../core/interfaces/salon-mesa.interface';
 import { MesaService } from '../../../core/services/mesa.service';
-import { SalonService } from '../../../core/services/salon.service';
 import { AlertService } from '../../../core/service/alert.service';
 
+//Modal para agregar (mesa = null) o editar una mesa
 @Component({
   selector: 'app-mesa-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './mesa-form.component.html',
   styleUrl: './mesa-form.component.css'
 })
 export class MesaFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private mesaService = inject(MesaService);
-  private salonService = inject(SalonService);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
   private alertService = inject(AlertService);
 
-  form: FormGroup;
-  id:number | null = null;
-  salonesAsignados: string[] = [];
+  @Input() mesa: MesaNueva | null = null;
+  //salones para el desplegable (cada mesa pertenece a un solo salon)
+  @Input() salones: SalonNuevo[] = [];
+  @Output() cerrar = new EventEmitter<void>();
+  @Output() guardado = new EventEmitter<void>();
 
-  constructor(){
-    this.form = this.fb.group({
-      nombre : ['', [Validators.required, Validators.maxLength(50)]],
-      capacidad: [1, [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)]],
-      cantidad: [0, [Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)]]
-    })
-  }
+  guardando = false;
+  form: FormGroup = this.fb.group({
+    nombre: ['', [Validators.required, Validators.maxLength(50)]],
+    capacidad: [1, [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)]],
+    idSalon: [null as number | null, [Validators.required]]
+  });
 
   ngOnInit(): void {
-    this.id = Number(this.route.snapshot.paramMap.get('id'));
-    if(this.id){
-      this.mesaService.getMesaById(this.id).subscribe(m =>{
-        this.form.patchValue(m)
-      })
-      //misma regla del backend: no se cambia la capacidad de una mesa ya asignada a salones
-      this.salonService.getSalones().subscribe(salones =>{
-        this.salonesAsignados = salones.filter(s => s.idMesa === this.id).map(s => s.nombre);
-        if(this.salonesAsignados.length > 0){
-          this.form.get('capacidad')?.disable();
-        }
-      })
-    }
+    if(this.mesa) this.form.patchValue(this.mesa);
   }
 
+  //POST /api/mesas al registrar, PUT /api/mesas/{id} al editar
   guardar(){
-    if(this.form.invalid) return;
-    //getRawValue incluye la capacidad aunque el campo este bloqueado
-    const mesa = this.form.getRawValue();
-    const request = this.id
-    ? this.mesaService.actualizarMesa(this.id, mesa)
-    : this.mesaService.crearMesa(mesa)
-    request.subscribe({
-      next:() =>{
-        this.alertService.success(this.id ? 'Mesa Actualizada':'Mesa Creada');
-        this.router.navigate(['/mesas']);
-      }, error:(err)=> this.alertService.error(err.error?.mensaje ?? 'Ocurrio un error al guardar')
-    })
+    if(this.form.invalid){
+      this.form.markAllAsTouched();
+      return;
+    }
+    const datos: MesaNueva = this.form.value;
+    const peticion = this.mesa
+      ? this.mesaService.actualizarMesa(this.mesa.idMesa!, datos)
+      : this.mesaService.crearMesa(datos);
+    this.guardando = true;
+    peticion.subscribe({
+      next:()=>{
+        this.guardando = false;
+        this.alertService.toast(this.mesa ? 'Mesa actualizada' : 'Mesa registrada');
+        this.guardado.emit();
+      },
+      error:(err)=>{
+        this.guardando = false;
+        this.alertService.error(err.error?.mensaje ?? 'No se pudo guardar la mesa');
+      }
+    });
   }
 }

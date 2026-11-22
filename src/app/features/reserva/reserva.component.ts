@@ -7,6 +7,8 @@ import { MesaService } from '../../core/services/mesa.service';
 import { CartService } from '../../core/services/cart.service';
 import { AlertService } from '../../core/service/alert.service';
 import { Salon } from '../../core/interfaces/salon.interface';
+import { MesaNueva } from '../../core/interfaces/salon-mesa.interface';
+import { PasosReservaComponent } from '../../shared/pasos-reserva/pasos-reserva.component';
 
 interface DiaCalendario{
   fecha: string;
@@ -16,7 +18,7 @@ interface DiaCalendario{
 @Component({
   selector: 'app-reserva',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, PasosReservaComponent],
   templateUrl: './reserva.component.html',
   styleUrl: './reserva.component.css'
 })
@@ -29,9 +31,12 @@ export class ReservaComponent implements OnInit {
   private router = inject(Router);
 
   form: FormGroup;
+  //paso del formulario: 1 Datos, 2 Fecha y hora (el mismo formulario guarda ambos)
+  etapa = 1;
   salones: Salon[] = [];
   salonSeleccionado: Salon | null = null;
-  capacidadMesa: number | null = null;
+  //mesas del salon para la fecha elegida; el cliente escoge una manualmente
+  mesas: MesaNueva[] = [];
 
   //calendario del mes visible
   nombresDias = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
@@ -40,14 +45,16 @@ export class ReservaComponent implements OnInit {
   //mesas libres por fecha, segun el backend
   disponibilidad: Record<string, number> = {};
   hoy = this.formatearFecha(new Date());
-  //horario de atencion: 10:00 a 17:00 cada 30 minutos (formato HH:mm del backend)
+  //horario de atencion: 10:00 a 17:00 cada 30 minutos (formato HH:mm del backend) (Ultimo digito la ctd de min)
   horas = this.generarHoras(10, 17, 30);
 
   constructor(){
     this.form = this.fb.group({
       nombre: ['', [Validators.required, Validators.maxLength(100)]],
       cantPersonas: [1, [Validators.required, Validators.min(1)]],
+      motivo: ['', [Validators.maxLength(100)]],
       idSalon: [null, [Validators.required]],
+      idMesa: [null as number | null, [Validators.required]],
       fechaReserva: ['', [Validators.required, this.fechaNoLunes]],
       horaReserva: ['', [Validators.required, this.horaPermitida]]
     })
@@ -76,24 +83,60 @@ export class ReservaComponent implements OnInit {
       error:()=> this.alertService.error('No se pudieron cargar los salones')
     });
     this.form.get('idSalon')?.valueChanges.subscribe(id => this.seleccionarSalon(id));
+    //al cambiar la fecha se consultan las mesas libres de ese dia
+    this.form.get('fechaReserva')?.valueChanges.subscribe(()=> this.cargarMesas());
+    //si la mesa elegida ya no alcanza para las personas, se limpia
+    this.form.get('cantPersonas')?.valueChanges.subscribe(()=>{
+      const mesa = this.mesaSeleccionada();
+      if(mesa && !this.mesaSeleccionable(mesa)) this.form.get('idMesa')?.setValue(null);
+    });
   }
 
   seleccionarSalon(id: number){
     this.salonSeleccionado = this.salones.find(s => s.idSalon === id) ?? null;
-    this.capacidadMesa = null;
     this.disponibilidad = {};
-    if(!this.salonSeleccionado) return;
-    //cada salon tiene su propio tipo de mesa y capacidad
-    this.mesaService.getMesaById(this.salonSeleccionado.idMesa).subscribe({
-      next:(mesa)=>{
-        this.capacidadMesa = mesa.capacidad;
-        const personas = this.form.get('cantPersonas');
-        personas?.setValidators([Validators.required, Validators.min(1), Validators.max(mesa.capacidad)]);
-        personas?.updateValueAndValidity();
-      },
-      error:()=> this.alertService.error('No se pudo consultar la capacidad de las mesas')
-    });
     this.cargarDisponibilidad();
+    this.cargarMesas();
+  }
+
+  //GET /api/mesas?idSalon=&fecha= : el backend indica si cada mesa esta libre ese dia
+  cargarMesas(){
+    const salon = this.salonSeleccionado;
+    const fecha = this.form.get('fechaReserva')?.value;
+    if(!salon || !fecha){
+      this.mesas = [];
+      return;
+    }
+    this.mesaService.listarMesas(salon.idSalon, fecha).subscribe({
+      next:(data)=>{
+        this.mesas = data;
+        //la mesa elegida antes se conserva solo si sigue siendo valida
+        const mesa = this.mesaSeleccionada();
+        if(!mesa || !this.mesaSeleccionable(mesa)) this.form.get('idMesa')?.setValue(null);
+      },
+      error:()=> this.alertService.error('No se pudieron consultar las mesas del salón')
+    });
+  }
+
+  mesaSeleccionada(){
+    return this.mesas.find(m => m.idMesa === this.form.get('idMesa')?.value) ?? null;
+  }
+
+  //se puede elegir si esta libre y su capacidad alcanza para las personas
+  mesaSeleccionable(m: MesaNueva){
+    return !!m.disponible && m.capacidad >= Number(this.form.get('cantPersonas')?.value);
+  }
+
+  //texto que acompana a cada mesa en el desplegable
+  motivoMesa(m: MesaNueva){
+    if(!m.disponible) return ' (ocupada)';
+    if(!this.mesaSeleccionable(m)) return ' (capacidad insuficiente)';
+    return '';
+  }
+
+  //capacidad de la mesa mas grande del salon, para orientar al cliente
+  capacidadMaxima(){
+    return this.mesas.length ? Math.max(...this.mesas.map(m => m.capacidad)) : null;
   }
 
   cargarDisponibilidad(){
@@ -108,7 +151,7 @@ export class ReservaComponent implements OnInit {
         //ignora respuestas de un salon que ya no esta seleccionado
         if(this.salonSeleccionado?.idSalon !== salon.idSalon) return;
         resultado.forEach(s =>{
-          if(s.fecha) this.disponibilidad[s.fecha] = s.mesasDisponibles ?? 0;
+          if(s.fecha) this.disponibilidad[s.fecha] = s.mdisponible ?? 0;
         });
         const fecha = this.form.value.fechaReserva;
         if(fecha && this.disponibilidad[fecha] !== undefined && this.disponibilidad[fecha] < 1){
@@ -177,11 +220,18 @@ export class ReservaComponent implements OnInit {
     this.form.get('horaReserva')?.markAsTouched();
   }
 
-  siguiente(){
-    if(this.form.get('cantPersonas')?.errors?.['max']){
-      this.alertService.error(`Para reservar para más de ${this.capacidadMesa} personas, comuníquese con un administrador`);
+  //paso 1 -> paso 2: solo se validan los datos del primer paso
+  irAFechaHora(){
+    const campos = ['nombre', 'cantPersonas', 'motivo'];
+    campos.forEach(c => this.form.get(c)?.markAsTouched());
+    if(campos.some(c => this.form.get(c)?.invalid)){
+      this.alertService.error('Completa correctamente tus datos');
       return;
     }
+    this.etapa = 2;
+  }
+
+  siguiente(){
     if(this.form.get('horaReserva')?.errors?.['horaNoPermitida']){
       this.alertService.error('Elige una hora entre 10:00 y 17:00, en intervalos de 30 minutos');
       return;
@@ -196,37 +246,42 @@ export class ReservaComponent implements OnInit {
       return;
     }
     const salon = this.salonSeleccionado;
-    if(!salon || this.capacidadMesa === null) return;
     const datos = this.form.value;
+    if(!salon) return;
     if(salon.estado !== 'DISPONIBLE'){
       this.alertService.error('El salón no está disponible');
       return;
     }
-    //misma regla del backend: no se reserva para mas personas que la capacidad de la mesa
-    if(datos.cantPersonas > this.capacidadMesa){
-      this.alertService.error(`Para reservar para más de ${this.capacidadMesa} personas, comuníquese con un administrador`);
-      return;
-    }
-    //se confirma con el backend que la fecha sigue disponible
-    this.salonService.getDisponibilidad(salon.idSalon, datos.fechaReserva).subscribe({
-      next:(s)=>{
-        if((s.mesasDisponibles ?? 0) < 1){
-          this.alertService.error('No quedan mesas disponibles en el salón para esa fecha');
+    //se vuelve a consultar al backend que la mesa elegida siga libre y alcance para las personas
+    this.mesaService.listarMesas(salon.idSalon, datos.fechaReserva).subscribe({
+      next:(data)=>{
+        this.mesas = data;
+        const mesa = this.mesaSeleccionada();
+        if(!mesa || !mesa.disponible){
+          this.form.get('idMesa')?.setValue(null);
+          this.alertService.error('La mesa elegida ya no está disponible para esa fecha. Elige otra mesa');
           this.cargarDisponibilidad();
+          return;
+        }
+        if(mesa.capacidad < datos.cantPersonas){
+          this.alertService.error(`${mesa.nombre} permite hasta ${mesa.capacidad} personas. Elige otra mesa`);
           return;
         }
         this.cartService.guardarReserva({
           nombre: datos.nombre,
+          motivo: datos.motivo,
           cantPersonas: datos.cantPersonas,
           idSalon: salon.idSalon,
           nombreSalon: salon.nombre,
-          capacidadMesa: this.capacidadMesa!,
+          idMesa: mesa.idMesa!,
+          nombreMesa: mesa.nombre,
+          capacidadMesa: mesa.capacidad,
           fechaReserva: datos.fechaReserva,
           horaReserva: datos.horaReserva
         });
         this.router.navigate(['/catalogo']);
       },
-      error:()=> this.alertService.error('No se pudo verificar la disponibilidad del salón')
+      error:()=> this.alertService.error('No se pudo verificar la disponibilidad de la mesa')
     });
   }
 

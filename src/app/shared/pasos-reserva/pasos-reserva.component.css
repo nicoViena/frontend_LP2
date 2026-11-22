@@ -1,0 +1,52 @@
+.pasos{
+  display: flex;
+  justify-content: space-between;
+}
+.paso{
+  flex: 1;
+  position: relative;
+  text-align: center;
+}
+/* linea horizontal que une cada paso con el siguiente */
+.paso:not(:last-child)::after{
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: calc(50% + 22px);
+  width: calc(100% - 44px);
+  height: 3px;
+  background: #d9d9d9;
+}
+.paso.completado:not(:last-child)::after{
+  background: #244A35;
+}
+.circulo{
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  background: #fff;
+  border: 2px solid #d9d9d9;
+  color: #8a8a8a;
+}
+.paso.actual .circulo{
+  background: #244A35;
+  border-color: #244A35;
+  color: #fff;
+}
+.paso.completado .circulo{
+  background: #fff;
+  border-color: #244A35;
+  color: #244A35;
+}
+.nombre{
+  color: #8a8a8a;
+}
+.paso.actual .nombre, .paso.completado .nombre{
+  color: #244A35;
+  font-weight: 600;
+}

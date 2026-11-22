@@ -1,0 +1,211 @@
+<!-- ENCABEZADO -->
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+  <div>
+    <h1 class="titulo">Dashboard</h1>
+    <p class="texto-suave mb-0">{{fechaLarga()}} · Resumen general de Hacienda VIMALU</p>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <span class="texto-suave small">Filtrar por fecha</span>
+    <div class="filtro">
+      <i class="bi bi-calendar3"></i>
+      <input type="date" [(ngModel)]="desde" (change)="cargarTopProductos()" aria-label="Desde">
+      <span>–</span>
+      <input type="date" [(ngModel)]="hasta" (change)="cargarTopProductos()" aria-label="Hasta">
+    </div>
+  </div>
+</div>
+
+<!-- TARJETAS DE RESUMEN -->
+<div class="row g-4 mb-4">
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <div class="d-flex justify-content-between">
+        <span class="icono"><i class="bi bi-calendar3"></i></span>
+        <ng-container *ngTemplateOutlet="tendencia; context: {$implicit: variacion(reservasEnRango().length, rangoAnterior().length)}"></ng-container>
+      </div>
+      <p class="etiqueta">Total de Reservas</p>
+      <p class="valor">{{reservasEnRango().length}}</p>
+      <p class="texto-suave small mb-0">en el rango seleccionado</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <div class="d-flex justify-content-between">
+        <span class="icono"><i class="bi bi-currency-dollar"></i></span>
+        <ng-container *ngTemplateOutlet="tendencia; context: {$implicit: variacion(ingresos(reservasEnRango()), ingresos(rangoAnterior()))}"></ng-container>
+      </div>
+      <p class="etiqueta">Ingresos</p>
+      <p class="valor">S/ {{ingresos(reservasEnRango()) | number:'1.0-2'}}</p>
+      <p class="texto-suave small mb-0">reservas terminadas</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <div class="d-flex justify-content-between">
+        <span class="icono"><i class="bi bi-box-seam"></i></span>
+      </div>
+      <p class="etiqueta">Productos Registrados</p>
+      <p class="valor">{{productos.length}}</p>
+      <p class="texto-suave small mb-0">{{productosConStock()}} con stock disponible</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <div class="d-flex justify-content-between">
+        <span class="icono"><i class="bi bi-check-circle"></i></span>
+        <ng-container *ngTemplateOutlet="tendencia; context: {$implicit: variacion(terminadas(reservasEnRango()), terminadas(rangoAnterior()))}"></ng-container>
+      </div>
+      <p class="etiqueta">Reservas Terminadas</p>
+      <p class="valor">{{terminadas(reservasEnRango())}}</p>
+      <p class="texto-suave small mb-0">
+        @if (reservasEnRango().length > 0) {
+          {{terminadas(reservasEnRango()) / reservasEnRango().length * 100 | number:'1.0-1'}}% del total
+        } @else { Sin datos }
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- GRAFICO DE VENTAS -->
+  <div class="col-xl-8">
+    <div class="tarjeta h-100">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h2 class="subtitulo">Ventas</h2>
+          <p class="texto-suave small">Ingresos por {{agrupacion === 'MES' ? 'mes · ' + hasta.substring(0, 4) : agrupacion === 'SEMANA' ? 'semana' : 'día'}}</p>
+        </div>
+        <div class="selector">
+          <button [class.activo]="agrupacion === 'DIA'" (click)="agrupacion = 'DIA'">Diario</button>
+          <button [class.activo]="agrupacion === 'SEMANA'" (click)="agrupacion = 'SEMANA'">Semanal</button>
+          <button [class.activo]="agrupacion === 'MES'" (click)="agrupacion = 'MES'">Mensual</button>
+        </div>
+      </div>
+
+      @if (barras(); as lista) {
+        @if (escalaMaxima(lista) > 0) {
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="valor">S/ {{lista[lista.length - 1].monto | number:'1.0-2'}}</span>
+            @if (lista.length > 1) {
+              <ng-container *ngTemplateOutlet="tendencia; context: {$implicit: variacion(lista[lista.length - 1].monto, lista[lista.length - 2].monto), texto: ' último período'}"></ng-container>
+            }
+          </div>
+          <div class="grafico">
+            <div class="eje">
+              @for (valor of ejeY(escalaMaxima(lista)); track $index) {
+                <span>{{montoCorto(valor)}}</span>
+              }
+            </div>
+            <div class="area">
+              @for (b of lista; track $index; let ultimo = $last) {
+                <div class="columna" [title]="'S/ ' + b.monto">
+                  <div class="barra" [class.dorada]="ultimo" [style.height.%]="b.monto / escalaMaxima(lista) * 100"></div>
+                  <span [class.fw-semibold]="ultimo">{{b.etiqueta}}</span>
+                </div>
+              }
+            </div>
+          </div>
+        } @else {
+          <p class="sin-datos">Sin datos</p>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- RESERVAS POR ESTADO -->
+  <div class="col-xl-4">
+    <div class="tarjeta h-100">
+      <h2 class="subtitulo">Reservas por estado</h2>
+      <p class="texto-suave small">{{fechaCorta(desde)}} – {{fechaCorta(hasta)}}</p>
+      @if (reservasEnRango().length > 0) {
+        <div class="donut" [style.background]="fondoDonut()">
+          <div class="centro">
+            <strong>{{reservasEnRango().length}}</strong>
+            <span>reservas</span>
+          </div>
+        </div>
+        @for (e of estados; track e.valor) {
+          <div class="d-flex align-items-center mb-2">
+            <span class="estado" [class]="e.clase">{{e.valor}}</span>
+            <strong class="ms-auto">{{cantidadPorEstado(e.valor)}}</strong>
+            <span class="porcentaje">{{cantidadPorEstado(e.valor) / reservasEnRango().length * 100 | number:'1.1-1'}}%</span>
+          </div>
+        }
+      } @else {
+        <p class="sin-datos">Sin datos</p>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- TOP 5 PRODUCTOS -->
+  <div class="col-xl-6">
+    <div class="tarjeta h-100">
+      <div class="d-flex justify-content-between">
+        <div>
+          <h2 class="subtitulo">Top 5 Productos Más Vendidos</h2>
+          <p class="texto-suave small">{{fechaCorta(desde)}} – {{fechaCorta(hasta)}}</p>
+        </div>
+        <a routerLink="/reportes" class="ver-todo">Ver todo <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <table class="tabla">
+        <thead>
+          <tr><th>#</th><th>PRODUCTO</th><th class="text-end">UNIDADES</th><th class="text-end">INGRESOS</th></tr>
+        </thead>
+        <tbody>
+          @for (p of topProductos; track p.idProducto; let i = $index) {
+            <tr>
+              <td><span class="puesto" [class.primero]="i === 0">{{i + 1}}</span></td>
+              <td>{{p.producto}}</td>
+              <td class="text-end">{{p.unidadesVendidas}}</td>
+              <td class="text-end">S/ {{p.ingresos | number:'1.0-2'}}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="sin-datos">Sin datos</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RESERVAS RECIENTES -->
+  <div class="col-xl-6">
+    <div class="tarjeta h-100">
+      <div class="d-flex justify-content-between">
+        <div>
+          <h2 class="subtitulo">Reservas Recientes</h2>
+          <p class="texto-suave small">Últimas 5 reservas registradas</p>
+        </div>
+        <a routerLink="/reservas" class="ver-todo">Ver todo <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <table class="tabla">
+        <thead>
+          <tr><th>ID</th><th>FECHA</th><th>SALÓN</th><th>ESTADO</th></tr>
+        </thead>
+        <tbody>
+          @for (r of recientes(); track r.idReserva) {
+            <tr>
+              <td class="id">#R-{{r.idReserva}}</td>
+              <td class="texto-suave">{{fechaCorta(r.fechaReserva)}}</td>
+              <td>{{nombreSalon(r.idSalon)}}</td>
+              <td><span class="estado" [class]="claseEstado(r.estadoReserva)">{{r.estadoReserva}}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="sin-datos">{{cargando ? 'Cargando...' : 'Sin datos'}}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Insignia de variacion: verde si sube, roja si baja; no se muestra sin datos para comparar -->
+<ng-template #tendencia let-valor let-texto="texto">
+  @if (valor !== null) {
+<span class="tendencia" [class.baja]="valor < 0">
+  <i class="bi" [class.bi-arrow-up]="valor >= 0" [class.bi-arrow-down]="valor < 0"></i>
+  {{(valor < 0 ? -valor : valor) | number:'1.1-1'}}%{{texto}}
+</span>
+  }
+</ng-template>

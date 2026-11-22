@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { Producto } from '../interfaces/producto.interface';
 
@@ -10,6 +10,9 @@ export class ProductoService {
   private http = inject(HttpClient);
   //usamos la ruta del backend
   private apiUrl = '/api/productos';
+
+  //texto del buscador del header; el catalogo lo usa para filtrar (no llama al backend)
+  busqueda = signal('');
 
   //Listar ruta publica
   getProductos():Observable<Producto[]>{

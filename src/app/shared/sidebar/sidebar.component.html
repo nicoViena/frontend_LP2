@@ -1,0 +1,27 @@
+<aside class="sidebar">
+  <a class="marca" routerLink="/">
+    <span class="logo"><img src="favicon.ico" alt="Logo Hacienda VIMALU"></span>
+    <span>
+      <strong>Hacienda VIMALU</strong>
+      <small>Panel administrativo</small>
+    </span>
+  </a>
+
+  <p class="titulo-menu">MENÚ PRINCIPAL</p>
+  <nav>
+    @for (item of menu; track item.ruta) {
+      <a class="item" [routerLink]="item.ruta" routerLinkActive="activo" [routerLinkActiveOptions]="{exact: item.ruta === '/'}">
+        <i class="bi" [class]="item.icono"></i> {{item.texto}}
+      </a>
+    }
+  </nav>
+
+  <div class="usuario">
+    <span class="avatar"><i class="bi bi-person"></i></span>
+    <span class="flex-grow-1">
+      <strong>{{ authService.usuario() ?? 'Administrador' }}</strong>
+      <small>Administrador</small>
+    </span>
+    <button type="button" class="salir" title="Cerrar sesión" (click)="authService.logout()"><i class="bi bi-box-arrow-right"></i></button>
+  </div>
+</aside>

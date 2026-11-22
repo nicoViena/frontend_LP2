@@ -1,37 +1,86 @@
-<div class="container mt-4">
-    <div  class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-vimalu-primary">Gestion de Mesas</h2>
-        <a routerLink="/mesas/nuevo" class="btn btn-success">Nueva Mesa</a>
-    </div>
-    <table class="table table-hover shadow-sm">
-        <thead class="bg-vimalu-primary text-white">
-            <tr>
-                <th>Nombre</th>
-                <th>Personas por mesa</th>
-                <th>Mesas libres</th>
-                <th>Asignadas a salones</th>
-                <th>Salones</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (m of mesas; track m.idMesa){
-                <tr>
-                    <td>{{m.nombre}}</td>
-                    <td>{{m.capacidad}}</td>
-                    <td>{{m.cantidad}}</td>
-                    <td>{{mesasAsignadas(m)}}</td>
-                    <td>{{nombresSalones(m) || '-'}}</td>
-                    <td>
-                        <a [routerLink]="['/mesas/editar', m.idMesa]" class="btn btn-sm btn-warning me-2">Editar</a>
-                        <button (click)="eliminar(m)" class="btn btn-sm btn-danger">Eliminar</button>
-                    </td>
-                </tr>
-            } @empty {
-                <tr>
-                    <td colspan="6" class="text-center text-muted">No hay mesas registradas</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<!-- ENCABEZADO -->
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+  <div>
+    <h1 class="titulo">Gestión de Mesas</h1>
+    <p class="texto-suave mb-0">Cada mesa pertenece a un solo salón</p>
+  </div>
+  <button class="btn-vimalu" (click)="nuevo()"><i class="bi bi-plus-lg"></i> Nueva Mesa</button>
 </div>
+
+<!-- FILTRO -->
+<div class="tarjeta mb-4">
+  <div class="row g-3 align-items-end">
+    <div class="col-md-5">
+      <label class="campo">Salón</label>
+      <select class="form-select" [(ngModel)]="filtroSalon">
+        <option [ngValue]="null">Todos los salones</option>
+        @for (s of salones; track s.idSalon) { <option [ngValue]="s.idSalon">{{s.nombre}}</option> }
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button class="btn-claro w-100" (click)="filtroSalon = null"><i class="bi bi-x-lg"></i> Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <h2 class="subtitulo">Listado de mesas</h2>
+      <p class="texto-suave small mb-0">Mesas y el salón al que pertenecen</p>
+    </div>
+    <span class="id small">{{mesasFiltradas().length}} resultados</span>
+  </div>
+
+  <table class="tabla">
+    <thead>
+      <tr><th>ID</th><th>Nombre</th><th class="text-center">Capacidad</th><th>Salón</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+      @for (m of mesasFiltradas(); track m.idMesa) {
+        <tr>
+          <td class="id">M-{{m.idMesa}}</td>
+          <td class="fw-medium">{{m.nombre}}</td>
+          <td class="text-center">{{m.capacidad}} personas</td>
+          <td [class.texto-suave]="m.idSalon === null">{{nombreSalon(m.idSalon)}}</td>
+          <td class="text-nowrap">
+            <button class="accion me-1" title="Ver detalle" (click)="detalle = m"><i class="bi bi-eye"></i></button>
+            <button class="accion editar me-1" title="Editar" (click)="editar(m)"><i class="bi bi-pencil"></i></button>
+            <button class="accion eliminar" title="Eliminar" (click)="eliminar(m)"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="5" class="sin-datos">{{ cargando ? 'Cargando...' : errorCarga ? 'Sin datos: no se pudo conectar con el backend' : 'Sin datos' }}</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- MODAL DETALLE -->
+@if (detalle) {
+  <div class="modal-fondo" (click)="detalle = null">
+    <div class="modal-caja detalle" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-start pb-3 mb-4 border-bottom">
+        <div>
+          <h3>Detalle de la mesa</h3>
+          <span class="id">M-{{detalle.idMesa}}</span>
+        </div>
+        <button class="cerrar" (click)="detalle = null"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="row g-3">
+        <div class="col-sm-4"><div class="dato"><small class="texto-suave">Nombre</small><strong>{{detalle.nombre}}</strong></div></div>
+        <div class="col-sm-4"><div class="dato"><small class="texto-suave">Capacidad</small><strong>{{detalle.capacidad}} personas</strong></div></div>
+        <div class="col-sm-4"><div class="dato"><small class="texto-suave">Salón</small><strong>{{nombreSalon(detalle.idSalon)}}</strong></div></div>
+      </div>
+      <div class="d-flex justify-content-end gap-2 border-top pt-4 mt-4">
+        <button class="btn-claro" (click)="detalle = null">Cerrar</button>
+        <button class="btn-vimalu" (click)="editar(detalle)"><i class="bi bi-pencil"></i> Editar mesa</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- MODAL AGREGAR / EDITAR -->
+@if (formularioAbierto) {
+  <app-mesa-form [mesa]="enEdicion" [salones]="salones" (cerrar)="formularioAbierto = false" (guardado)="guardado()"></app-mesa-form>
+}

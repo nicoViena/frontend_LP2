@@ -9,6 +9,8 @@ export interface Salon{
     fecha?: string | null;
     mesasOcupadas?: number | null;
     mesasDisponibles?: number | null;
+    //backend corregido: mesas libres del salon en la fecha consultada
+    mdisponible?: number | null;
     capacidadDisponible?: number | null;
 }
 

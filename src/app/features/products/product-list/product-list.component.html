@@ -1,39 +1,182 @@
-<div class="container mt-4">
-    <div  class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-vimalu-primary">Gestion de Productos</h2>
-        <a routerLink="/productos/nuevo" class="btn btn-success">Nuevo Producto</a>
-    </div>
-    <table class="table table-hover shadow-sm">
-        <thead class="bg-vimalu-primary text-white">
-            <tr>
-                <th>Imagen</th>
-                <th>Nombres</th>
-                <th>Categoria</th>
-                <th>Precio</th>
-                <th>Stock</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (p of productos; track p.idProducto){
-                <tr>
-                    <td>
-                        @if (p.imagen) {
-                            <img [src]="p.imagen" width="50" class="rounded">
-                        } @else {
-                            <i class="bi bi-image text-muted fs-3"></i>
-                        }
-                    </td>
-                    <td>{{p.nombre}}</td>
-                    <td>{{p.categoria}}</td>
-                    <td>{{p.precio}}</td>
-                    <td>{{p.stock}}</td>
-                    <td>
-                        <a [routerLink]="['/productos/editar', p.idProducto]" class="btn btn-sm btn-warning me-2">Editar</a>
-                        <button (click)="eliminar(p.idProducto!)" class="btn btn-sm btn-danger">Eliminar</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<!-- ENCABEZADO -->
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+  <div>
+    <h1 class="titulo">Gestión de Productos</h1>
+    <p class="texto-suave mb-0">Administra la carta del restaurante: precios, stock y disponibilidad</p>
+  </div>
+  <button class="btn-vimalu" (click)="nuevo()"><i class="bi bi-plus-lg"></i> Nuevo Producto</button>
 </div>
+
+<!-- TARJETAS -->
+<div class="row g-4 mb-4">
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <span class="icono"><i class="bi bi-box-seam"></i></span>
+      <p class="etiqueta">Total de productos</p>
+      <p class="valor">{{productos.length}}</p>
+      <p class="texto-suave small mb-0">registrados en la carta</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <span class="icono"><i class="bi bi-check-circle"></i></span>
+      <p class="etiqueta">Disponibles</p>
+      <p class="valor">{{disponibles()}}</p>
+      <p class="texto-suave small mb-0">con stock para la venta</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <span class="icono"><i class="bi bi-exclamation-circle"></i></span>
+      <p class="etiqueta">Agotados</p>
+      <p class="valor">{{agotados()}}</p>
+      <p class="texto-suave small mb-0">sin stock, requieren reposición</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <span class="icono"><i class="bi bi-stack"></i></span>
+      <p class="etiqueta">Stock total</p>
+      <p class="valor">{{stockTotal() | number}}</p>
+      <p class="texto-suave small mb-0">unidades en inventario</p>
+    </div>
+  </div>
+</div>
+
+<!-- FILTROS -->
+<div class="tarjeta mb-4">
+  <div class="row g-3 align-items-end">
+    <div class="col-lg-5">
+      <label class="campo">Buscar</label>
+      <div class="position-relative">
+        <i class="bi bi-search lupa"></i>
+        <input type="search" class="form-control ps-5" placeholder="Buscar producto por nombre..." [(ngModel)]="busqueda" (ngModelChange)="filtrar()">
+      </div>
+    </div>
+    <div class="col-lg-3">
+      <label class="campo">Categoría</label>
+      <select class="form-select" [(ngModel)]="categoria" (ngModelChange)="filtrar()">
+        <option value="">Todas las categorías</option>
+        @for (c of categorias(); track c) { <option [value]="c">{{c}}</option> }
+      </select>
+    </div>
+    <div class="col-lg-2">
+      <label class="campo">Disponibilidad</label>
+      <select class="form-select" [(ngModel)]="disponibilidad" (ngModelChange)="filtrar()">
+        <option value="">Todas</option>
+        <option value="DISPONIBLE">Disponible</option>
+        <option value="AGOTADO">Agotado</option>
+      </select>
+    </div>
+    <div class="col-lg-2">
+      <button class="btn-claro w-100" (click)="limpiar()"><i class="bi bi-x-lg"></i> Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LISTADO -->
+<div class="tarjeta">
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <h2 class="subtitulo">Listado de productos</h2>
+      <p class="texto-suave small mb-0">Productos de la carta ordenados por ID</p>
+    </div>
+    <span class="id small">{{filtrados().length}} resultados</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>ID</th><th>Imagen</th><th>Nombre</th><th>Categoría</th>
+          <th class="text-end">Precio (S/)</th><th class="text-center">Stock</th><th>Disponibilidad</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of paginaActual(); track p.idProducto) {
+          <tr>
+            <td class="id">{{codigo(p)}}</td>
+            <td>
+              <span class="miniatura">
+                @if (p.imagen) { <img [src]="p.imagen" [alt]="p.nombre"> } @else { <i class="bi bi-image"></i> }
+              </span>
+            </td>
+            <td>
+              <span class="d-block fw-medium">{{p.nombre}}</span>
+              <small class="texto-suave">{{p.descripcion}}</small>
+            </td>
+            <td class="texto-suave">{{p.categoria || '-'}}</td>
+            <td class="text-end">{{p.precio | number:'1.2-2'}}</td>
+            <td class="text-center" [class.text-danger]="p.stock <= 0">{{p.stock}}</td>
+            <td><span class="estado" [class]="p.stock > 0 ? 'disponible' : 'agotado'">{{p.stock > 0 ? 'DISPONIBLE' : 'AGOTADO'}}</span></td>
+            <td class="text-nowrap">
+              <button class="accion me-1" title="Ver detalle" (click)="detalle = p"><i class="bi bi-eye"></i></button>
+              <button class="accion editar me-1" title="Editar" (click)="editar(p)"><i class="bi bi-pencil"></i></button>
+              <button class="accion eliminar" title="Eliminar" (click)="eliminar(p)"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="sin-datos">Sin datos</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGINACION -->
+  @if (filtrados().length > 0) {
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+      <small class="texto-suave">
+        Mostrando {{(pagina - 1) * porPagina + 1}}–{{(pagina - 1) * porPagina + paginaActual().length}} de {{filtrados().length}} productos
+      </small>
+      <div class="paginacion">
+        <button [disabled]="pagina === 1" (click)="pagina = pagina - 1"><i class="bi bi-chevron-left"></i></button>
+        @for (n of paginas(); track n) {
+          <button [class.activo]="n === pagina" (click)="pagina = n">{{n}}</button>
+        }
+        <button [disabled]="pagina === totalPaginas()" (click)="pagina = pagina + 1"><i class="bi bi-chevron-right"></i></button>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- MODAL DETALLE -->
+@if (detalle) {
+  <div class="modal-fondo" (click)="detalle = null">
+    <div class="modal-caja" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-start pb-3 mb-4 border-bottom">
+        <div>
+          <h3>Detalle del producto</h3>
+          <span class="id">{{codigo(detalle)}}</span>
+          <span class="estado ms-2" [class]="detalle.stock > 0 ? 'disponible' : 'agotado'">{{detalle.stock > 0 ? 'DISPONIBLE' : 'AGOTADO'}}</span>
+          <small class="texto-suave"> · Registrado en la carta</small>
+        </div>
+        <button class="cerrar" (click)="detalle = null"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-5">
+          <div class="imagen-detalle">
+            @if (detalle.imagen) { <img [src]="detalle.imagen" [alt]="detalle.nombre"> } @else { <i class="bi bi-image fs-1"></i> }
+          </div>
+        </div>
+        <div class="col-md-7">
+          <h3 class="mb-2">{{detalle.nombre}}</h3>
+          @if (detalle.categoria) { <span class="etiqueta-categoria">{{detalle.categoria}}</span> }
+          <p class="texto-suave mt-3">{{detalle.descripcion || 'Sin descripción'}}</p>
+          <div class="row g-3">
+            <div class="col-6"><div class="dato"><small class="texto-suave"><i class="bi bi-currency-dollar"></i> Precio</small><strong>S/ {{detalle.precio | number:'1.2-2'}}</strong></div></div>
+            <div class="col-6"><div class="dato"><small class="texto-suave"><i class="bi bi-stack"></i> Stock</small><strong>{{detalle.stock}} unidades</strong></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end gap-2 border-top pt-4 mt-4">
+        <button class="btn-claro" (click)="detalle = null">Cerrar</button>
+        <button class="btn-vimalu" (click)="editar(detalle)"><i class="bi bi-pencil"></i> Editar producto</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- MODAL NUEVO / EDITAR -->
+@if (formularioAbierto) {
+  <app-product-form [producto]="enEdicion" [categorias]="categorias()" (cerrar)="cerrarFormulario($event)"></app-product-form>
+}

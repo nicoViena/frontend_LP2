@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark navbar-vimalu">
   <div class="container-fluid">
-    <a class="navbar-brand py-0" routerLink="/reserva">
+    <a class="navbar-brand py-0" routerLink="/">
       <img src="favicon.ico" alt="Hacienda Vimalu" class="logo-vimalu">
     </a>
 
@@ -11,27 +11,42 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link" routerLink="/reserva" routerLinkActive="active">Inicio</a>
+          <a class="nav-link" routerLink="/inicio" routerLinkActive="active">Inicio</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/reserva" routerLinkActive="active">Reservar</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/mis-reservas" routerLinkActive="active">Mis Reservas</a>
         </li>
 
-        <!-- MENÚ GESTIÓN: Solo visible para ADMIN -->
+        <!-- MENÚ GESTIÓN: solo visible para ADMIN (los guards y el backend siguen validando el rol) -->
+        @if (authService.getRol() === 'ADMIN') {
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Gestión
           </a>
           <ul class="dropdown-menu">
+            <li><a class="dropdown-item" routerLink="/reservas">Gestión de Reservas</a></li>
             <li><a class="dropdown-item" routerLink="/productos">Productos</a></li>
             <li><a class="dropdown-item" routerLink="/mesas">Mesas</a></li>
             <li><a class="dropdown-item" routerLink="/salones">Salones</a></li>
           </ul>
         </li>
+        }
       </ul>
 
-      <!-- Buscador -->
-      <form class="d-flex me-3" role="search">
-        <input class="form-control me-2" type="search" placeholder="Buscar..." aria-label="Search">
+      <!-- Buscador: solo en el catalogo -->
+      @if (esCatalogo()) {
+      <form class="d-flex me-3" role="search" (submit)="$event.preventDefault(); buscar(texto.value)">
+        <input #texto class="form-control me-2" type="search" placeholder="Buscar..." aria-label="Search"
+          [value]="productoService.busqueda()">
+        @if (productoService.busqueda()) {
+          <button class="btn btn-outline-light me-2" type="button" title="Limpiar búsqueda" (click)="limpiar(texto)"><i class="bi bi-x-lg"></i></button>
+        }
         <button class="btn btn-outline-accent" type="submit">Buscar</button>
       </form>
+      }
 
       <!-- ICONO DEL CARRITO -->
       <div class="me-3 position-relative" style="cursor: pointer;" routerLink="/carrito">
@@ -44,12 +59,15 @@
 
       <!-- SECCIÓN DE AUTENTICACIÓN -->
       <div class="d-flex align-items-center ms-lg-3">
-        <!-- Botón que activa el Modal -->
-        <button type="button" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#loginModal">
-          Ingresar
-        </button>
-        <span class="text-white me-3">Hola, <strong>Juan Perez</strong></span>
-        <button class="btn btn-danger btn-sm">Cerrar Sesión</button>
+        <!-- Con sesion: nombre real y cerrar sesion; sin sesion: ir al login -->
+        @if (authService.usuario(); as usuario) {
+          <span class="text-white me-3">Hola, <strong>{{usuario}}</strong></span>
+          <button class="btn btn-danger btn-sm" (click)="authService.logout()">Cerrar Sesión</button>
+        } @else {
+          <a routerLink="/login" class="btn btn-outline-light">
+            Ingresar
+          </a>
+        }
       </div>
     </div>
   </div>

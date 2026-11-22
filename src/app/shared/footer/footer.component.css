@@ -7,3 +7,13 @@
   font-size: 14px;
   width: 100%;
 }
+
+/* iconos de redes: blancos y dorados al pasar el mouse */
+.redes a {
+  color: #fff;
+  font-size: 1.3rem;
+  transition: color 0.2s;
+}
+.redes a:hover {
+  color: var(--color-acento);
+}

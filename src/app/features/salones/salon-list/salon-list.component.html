@@ -1,49 +1,70 @@
-<div class="container mt-4">
-    <div  class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-vimalu-primary">Gestion de Salones</h2>
-        <a routerLink="/salones/nuevo" class="btn btn-success">Nuevo Salón</a>
-    </div>
-    <table class="table table-hover shadow-sm">
-        <thead class="bg-vimalu-primary text-white">
-            <tr>
-                <th>Nombre</th>
-                <th>Tipo de mesa</th>
-                <th>Mesas</th>
-                <th>Capacidad total</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (s of salones; track s.idSalon){
-                <tr>
-                    <td>{{s.nombre}}</td>
-                    <td>
-                        @if (mesaDe(s); as mesa) {
-                            {{mesa.nombre}} <small class="text-muted">({{mesa.capacidad}} personas por mesa)</small>
-                        } @else {
-                            -
-                        }
-                    </td>
-                    <td>{{s.cantidad}}</td>
-                    <td>{{s.capacidad}} personas</td>
-                    <td>
-                        @if (s.estado === 'DISPONIBLE') {
-                            <span class="badge bg-success">Disponible</span>
-                        } @else {
-                            <span class="badge bg-secondary">No disponible</span>
-                        }
-                    </td>
-                    <td>
-                        <a [routerLink]="['/salones/editar', s.idSalon]" class="btn btn-sm btn-warning me-2">Editar</a>
-                        <button (click)="eliminar(s.idSalon)" class="btn btn-sm btn-danger">Eliminar</button>
-                    </td>
-                </tr>
-            } @empty {
-                <tr>
-                    <td colspan="6" class="text-center text-muted">No hay salones registrados</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<!-- ENCABEZADO -->
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+  <div>
+    <h1 class="titulo">Gestión de Salones</h1>
+    <p class="texto-suave mb-0">Salones del restaurante y la cantidad de mesas de cada uno</p>
+  </div>
+  <button class="btn-vimalu" (click)="nuevo()"><i class="bi bi-plus-lg"></i> Nuevo Salón</button>
 </div>
+
+<div class="tarjeta">
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <h2 class="subtitulo">Listado de salones</h2>
+      <p class="texto-suave small mb-0">Un salón tiene muchas mesas</p>
+    </div>
+    <span class="id small">{{salones.length}} resultados</span>
+  </div>
+
+  <table class="tabla">
+    <thead>
+      <tr><th>ID</th><th>Nombre</th><th class="text-center">Cantidad de mesas</th><th>Estado</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+      @for (s of salones; track s.idSalon) {
+        <tr>
+          <td class="id">S-{{s.idSalon}}</td>
+          <td class="fw-medium">{{s.nombre}}</td>
+          <td class="text-center">{{s.cantidadMesas}}</td>
+          <td><span class="estado" [class]="s.estado === 'DISPONIBLE' ? 'disponible' : 'agotado'">{{s.estado === 'DISPONIBLE' ? 'DISPONIBLE' : 'NO DISPONIBLE'}}</span></td>
+          <td class="text-nowrap">
+            <button class="accion me-1" title="Ver detalle" (click)="detalle = s"><i class="bi bi-eye"></i></button>
+            <button class="accion editar me-1" title="Editar" (click)="editar(s)"><i class="bi bi-pencil"></i></button>
+            <button class="accion eliminar" title="Eliminar" (click)="eliminar(s)"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="5" class="sin-datos">{{ cargando ? 'Cargando...' : errorCarga ? 'Sin datos: no se pudo conectar con el backend' : 'Sin datos' }}</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- MODAL DETALLE -->
+@if (detalle) {
+  <div class="modal-fondo" (click)="detalle = null">
+    <div class="modal-caja detalle" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-start pb-3 mb-4 border-bottom">
+        <div>
+          <h3>Detalle del salón</h3>
+          <span class="id">S-{{detalle.idSalon}}</span>
+          <span class="estado ms-2" [class]="detalle.estado === 'DISPONIBLE' ? 'disponible' : 'agotado'">{{detalle.estado === 'DISPONIBLE' ? 'DISPONIBLE' : 'NO DISPONIBLE'}}</span>
+        </div>
+        <button class="cerrar" (click)="detalle = null"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="row g-3">
+        <div class="col-6"><div class="dato"><small class="texto-suave">Nombre</small><strong>{{detalle.nombre}}</strong></div></div>
+        <div class="col-6"><div class="dato"><small class="texto-suave">Cantidad de mesas</small><strong>{{detalle.cantidadMesas}}</strong></div></div>
+      </div>
+      <div class="d-flex justify-content-end gap-2 border-top pt-4 mt-4">
+        <button class="btn-claro" (click)="detalle = null">Cerrar</button>
+        <button class="btn-vimalu" (click)="editar(detalle)"><i class="bi bi-pencil"></i> Editar salón</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- MODAL AGREGAR / EDITAR -->
+@if (formularioAbierto) {
+  <app-salon-form [salon]="enEdicion" (cerrar)="formularioAbierto = false" (guardado)="guardado()"></app-salon-form>
+}

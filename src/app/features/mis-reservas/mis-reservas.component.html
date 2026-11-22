@@ -1,0 +1,89 @@
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <h2 class="text-vimalu-primary mb-0"><i class="bi bi-calendar-check"></i> Mis Reservas</h2>
+    <a routerLink="/reserva" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nueva Reserva</a>
+  </div>
+
+  @if (cargando) {
+    <p class="text-muted">Cargando tus reservas...</p>
+  } @else if (errorCarga) {
+    <div class="alert alert-danger">No se pudieron cargar tus reservas. Intenta nuevamente más tarde.</div>
+  } @else if (reservas.length === 0) {
+    <!-- MENSAJE CUANDO EL CLIENTE AUN NO TIENE RESERVAS -->
+    <div class="text-center py-5 shadow-sm bg-white rounded">
+      <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+      <h4 class="mt-3">Todavía no tienes reservas</h4>
+      <p class="text-muted">Cuando registres una reserva, aparecerá aquí.</p>
+      <a routerLink="/reserva" class="btn btn-primary mt-2">Hacer mi primera reserva</a>
+    </div>
+  } @else {
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="bg-light">
+            <tr>
+              <th>ID</th><th>Fecha</th><th>Hora</th><th>Salón</th><th>Mesa</th>
+              <th class="text-center">Personas</th><th>Estado</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of reservas; track r.idReserva) {
+              <tr>
+                <td class="text-muted">#R-{{r.idReserva}}</td>
+                <td>{{r.fechaReserva}}</td>
+                <td>{{r.horaReserva}}</td>
+                <td>{{nombreSalon(r.idMesa)}}</td>
+                <td>{{nombreMesa(r.idMesa)}}</td>
+                <td class="text-center">{{r.cantidadPersonas}}</td>
+                <td><span class="badge" [ngClass]="claseEstado(r.estadoReserva)">{{r.estadoReserva}}</span></td>
+                <td class="text-end">
+                  <button class="btn btn-outline-secondary btn-sm" (click)="verDetalle(r.idReserva!)">
+                    <i class="bi bi-eye"></i> Ver detalle
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- MODAL DE DETALLE (solo lectura) -->
+@if (detalle) {
+  <div class="fondo-modal" (click)="detalle = null">
+    <div class="card shadow caja-modal" (click)="$event.stopPropagation()">
+      <div class="card-header bg-vimalu-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Reserva #R-{{detalle.idReserva}}</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="detalle = null"></button>
+      </div>
+      <div class="card-body">
+        <span class="badge mb-3" [ngClass]="claseEstado(detalle.estadoReserva)">{{detalle.estadoReserva}}</span>
+        <div class="row small g-2 mb-3">
+          <div class="col-6"><i class="bi bi-house-door"></i> {{nombreSalon(detalle.idMesa)}}</div>
+          <div class="col-6"><i class="bi bi-grid-3x3-gap"></i> {{nombreMesa(detalle.idMesa)}}</div>
+          <div class="col-6"><i class="bi bi-calendar-event"></i> {{detalle.fechaReserva}}</div>
+          <div class="col-6"><i class="bi bi-clock"></i> {{detalle.horaReserva}}</div>
+          <div class="col-6"><i class="bi bi-people"></i> {{detalle.cantidadPersonas}} personas</div>
+          <div class="col-6"><i class="bi bi-chat-left-text"></i> {{detalle.motivo || 'Sin motivo'}}</div>
+        </div>
+
+        <!-- PAGOS: montos calculados por el backend en ReservaDTO -->
+        <h6 class="text-vimalu-primary border-top pt-3">Pagos</h6>
+        <div class="d-flex justify-content-between"><span>Total de la reserva</span><strong>S/ {{ (detalle.total ?? 0) | number:'1.2-2' }}</strong></div>
+        <div class="d-flex justify-content-between"><span>Pagado</span><strong>S/ {{ (detalle.totalPagado ?? 0) | number:'1.2-2' }}</strong></div>
+        <div class="d-flex justify-content-between mb-3"><span>Saldo pendiente</span><strong>S/ {{ (detalle.saldoPendiente ?? 0) | number:'1.2-2' }}</strong></div>
+
+        <!-- PRODUCTOS: el backend no ofrece al cliente un endpoint para consultarlos -->
+        <h6 class="text-vimalu-primary border-top pt-3">Productos</h6>
+        <p class="small text-muted mb-0">
+          <i class="bi bi-info-circle"></i> El detalle de productos todavía no está disponible para consulta.
+        </p>
+      </div>
+      <div class="card-footer bg-white text-end">
+        <button class="btn btn-outline-secondary" (click)="detalle = null">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

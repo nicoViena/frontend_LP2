@@ -1,7 +1,39 @@
 <div class="container mt-5">
+  <!-- BARRA DE PROGRESO: paso 4 (Pago); al confirmar, todos los pasos quedan completados -->
+  <app-pasos-reserva [paso]="confirmada ? 5 : 4"></app-pasos-reserva>
   <h2 class="text-vimalu-primary mb-4"><i class="bi bi-cart-fill"></i> Tu Carrito de Reserva</h2>
 
-  @if (reserva) {
+  <!-- RESUMEN DE CONFIRMACION: datos devueltos por el backend -->
+  @if (confirmada && resumen) {
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <h4 class="text-vimalu-primary"><i class="bi bi-check-circle-fill text-success"></i> Reserva registrada</h4>
+        <p class="text-muted">Código de reserva: <strong>#R-{{confirmada.reserva.idReserva}}</strong> · Estado: <strong>{{confirmada.reserva.estadoReserva}}</strong></p>
+        <div class="row small mb-3">
+          <div class="col-6 col-md-3"><i class="bi bi-house-door"></i> {{resumen.nombreSalon}} · {{resumen.nombreMesa}}</div>
+          <div class="col-6 col-md-3"><i class="bi bi-calendar-event"></i> {{confirmada.reserva.fechaReserva}}</div>
+          <div class="col-6 col-md-3"><i class="bi bi-clock"></i> {{confirmada.reserva.horaReserva}}</div>
+          <div class="col-6 col-md-3"><i class="bi bi-people"></i> {{confirmada.reserva.cantidadPersonas}} personas</div>
+        </div>
+        @if (confirmada.detalles.length > 0) {
+          <p class="mb-1 fw-medium">Productos registrados: {{confirmada.detalles.length}}</p>
+        }
+        <div class="d-flex justify-content-between border-top pt-3">
+          <span>Total de la reserva</span>
+          <strong>S/ {{ (confirmada.reserva.total ?? 0) | number:'1.2-2' }}</strong>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span>Saldo pendiente</span>
+          <strong>S/ {{ (confirmada.reserva.saldoPendiente ?? 0) | number:'1.2-2' }}</strong>
+        </div>
+        <small class="d-block text-muted mt-3">
+          <i class="bi bi-info-circle"></i> Se generó el pago inicial de S/ {{cartService.adelanto.toFixed(2)}} en estado PENDIENTE.
+          Aún no está pagado.
+        </small>
+        <a routerLink="/reserva" class="btn btn-primary mt-3">Hacer otra reserva</a>
+      </div>
+    </div>
+  } @else if (reserva) {
     <div class="row">
       <!-- COLUMNA IZQUIERDA: RESERVA Y PRODUCTOS -->
       <div class="col-md-8">
@@ -15,7 +47,7 @@
               </a>
             </div>
             <div class="row small">
-              <div class="col-6 col-md-3"><i class="bi bi-house-door"></i> {{reserva.nombreSalon}}</div>
+              <div class="col-6 col-md-3"><i class="bi bi-house-door"></i> {{reserva.nombreSalon}}@if (reserva.nombreMesa) { · {{reserva.nombreMesa}} }</div>
               <div class="col-6 col-md-3"><i class="bi bi-calendar-event"></i> {{reserva.fechaReserva}}</div>
               <div class="col-6 col-md-3"><i class="bi bi-clock"></i> {{reserva.horaReserva}}</div>
               <div class="col-6 col-md-3"><i class="bi bi-people"></i> {{reserva.cantPersonas}} personas</div>
@@ -110,6 +142,15 @@
               El total de reserva es el subtotal de productos, con un mínimo de S/ {{cartService.adelanto.toFixed(2)}}.
               El saldo es estimado y se confirma al registrar la reserva.
             </small>
+
+            <!-- se desactiva mientras se espera la respuesta del backend -->
+            <button type="button" class="btn btn-light w-100 mt-4 fw-bold" (click)="confirmarReserva()" [disabled]="enviando">
+              @if (enviando) {
+                <span class="spinner-border spinner-border-sm"></span> Registrando...
+              } @else {
+                <i class="bi bi-check-circle"></i> Confirmar reserva
+              }
+            </button>
           </div>
         </div>
 

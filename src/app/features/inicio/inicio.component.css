@@ -1,0 +1,143 @@
+/* la foto ocupa todo el ancho; cover mantiene sus proporciones recortando lo necesario */
+.portada{
+  min-height: 75vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.6)),
+    url('/images/hacienda-vimalu.webp') center / cover no-repeat;
+}
+
+.titulo{
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 6vw, 3.8rem);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.subtitulo{
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  margin-bottom: 2rem;
+}
+
+/* boton dorado de la marca */
+.btn-reservar{
+  display: inline-block;
+  padding: 12px 32px;
+  border-radius: 30px;
+  background: #C9A227;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.btn-reservar:hover{
+  background: #244A35;
+  color: #fff;
+}
+
+/* en celulares la portada es un poco mas baja */
+@media (max-width: 576px){
+  .portada{
+    min-height: 60vh;
+  }
+}
+
+/* ===== SECCIONES DEBAJO DE LA PORTADA ===== */
+.seccion-crema{
+  background: #FAF6EC;
+  padding: 70px 0;
+}
+.seccion-info{
+  background: #fff;
+  padding: 70px 0;
+}
+
+.titulo-seccion{
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  color: #244A35;
+  text-align: center;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+}
+.linea-dorada{
+  width: 70px;
+  height: 3px;
+  background: #C9A227;
+  margin: 12px auto 0;
+}
+.titulo-tarjeta{
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  color: #244A35;
+  font-size: 1.4rem;
+}
+
+/* tarjeta con bordes redondeados, sombra suave y hover sencillo */
+.tarjeta{
+  height: 100%;
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border-bottom: 4px solid #C9A227;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.tarjeta:hover{
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+}
+
+/* misma proporcion que la foto (4:5): se ve completa, sin recortar plato ni titulo */
+.foto{
+  position: relative;
+  aspect-ratio: 4 / 5;
+}
+.foto img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.etiqueta{
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: #244A35;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid #C9A227;
+}
+
+/* espacio elegante a la espera de la foto real */
+.foto-pendiente{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(160deg, #244A35, #1a3626);
+  color: #C9A227;
+}
+.foto-pendiente i{
+  font-size: 3.5rem;
+}
+.foto-pendiente small{
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 1px;
+}
+
+.icono{
+  font-size: 2.6rem;
+  color: #C9A227;
+  background: #FAF6EC;
+  width: 80px;
+  height: 80px;
+  line-height: 80px;
+  border-radius: 50%;
+  display: inline-block;
+}

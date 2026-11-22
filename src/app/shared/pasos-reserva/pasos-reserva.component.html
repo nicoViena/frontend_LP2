@@ -1,0 +1,10 @@
+<div class="pasos mb-4">
+  @for (nombre of pasos; track nombre; let i = $index) {
+    <div class="paso" [class.actual]="i + 1 === paso" [class.completado]="i + 1 < paso">
+      <div class="circulo">
+        @if (i + 1 < paso) { <i class="bi bi-check-lg"></i> } @else { {{i + 1}} }
+      </div>
+      <small class="nombre">{{nombre}}</small>
+    </div>
+  }
+</div>

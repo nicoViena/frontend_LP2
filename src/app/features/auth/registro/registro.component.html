@@ -1,0 +1,53 @@
+<div class="admin auth-pagina">
+  <div class="tarjeta auth-tarjeta registro">
+    <div class="text-center mb-4">
+      <span class="auth-logo"><img src="favicon.ico" alt="Logo Hacienda VIMALU"></span>
+      <h1 class="auth-titulo">Crear cuenta</h1>
+      <p class="texto-suave mb-0">Regístrate como cliente de Hacienda VIMALU</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="registrar()">
+      <div class="mb-3">
+        <label class="campo">Nombre completo *</label>
+        <input type="text" formControlName="nombre" class="form-control" maxlength="100">
+        @if (invalido('nombre')) { <small class="text-danger">El nombre es obligatorio</small> }
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-sm-6">
+          <label class="campo">DNI *</label>
+          <input type="text" formControlName="dni" class="form-control" maxlength="8" inputmode="numeric">
+          @if (invalido('dni')) { <small class="text-danger">El DNI debe tener 8 dígitos</small> }
+        </div>
+        <div class="col-sm-6">
+          <label class="campo">Teléfono *</label>
+          <input type="text" formControlName="telefono" class="form-control" maxlength="9" inputmode="numeric">
+          @if (invalido('telefono')) { <small class="text-danger">9 dígitos y empezar en 9</small> }
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="campo">Correo *</label>
+        <input type="email" formControlName="email" class="form-control" maxlength="100" autocomplete="email">
+        @if (invalido('email')) { <small class="text-danger">Debe ser un correo válido</small> }
+      </div>
+      <div class="row g-3 mb-4">
+        <div class="col-sm-6">
+          <label class="campo">Usuario *</label>
+          <input type="text" formControlName="usuario" class="form-control" maxlength="20" autocomplete="username">
+          @if (invalido('usuario')) { <small class="text-danger">Entre 4 y 20 caracteres</small> }
+        </div>
+        <div class="col-sm-6">
+          <label class="campo">Contraseña *</label>
+          <input type="password" formControlName="password" class="form-control" autocomplete="new-password">
+          @if (invalido('password')) { <small class="text-danger">Al menos 6 caracteres</small> }
+        </div>
+      </div>
+      <button type="submit" class="btn-vimalu w-100" [disabled]="cargando">
+        <i class="bi bi-person-plus"></i> {{ cargando ? 'Registrando...' : 'Registrarme' }}
+      </button>
+    </form>
+
+    <p class="text-center small mt-4 mb-0">
+      ¿Ya tienes cuenta? <a routerLink="/login" class="id">Inicia sesión</a>
+    </p>
+  </div>
+</div>

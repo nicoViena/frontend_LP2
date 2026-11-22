@@ -1,0 +1,125 @@
+/* El host se estira como columna del contenedor flex del Dashboard;
+   al ser flex, el aside interno tambien ocupa toda esa altura */
+:host {
+  display: flex;
+}
+
+.sidebar {
+  width: 260px;
+  white-space: nowrap;
+  min-height: 100vh;
+  background: var(--color-primario);
+  color: #fff;
+  padding: 26px 20px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  text-decoration: none;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.marca strong {
+  display: block;
+  font-family: "Playfair Display", serif;
+  font-size: 18px;
+}
+
+.marca small, .usuario small {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-dorado);
+  color: var(--color-primario);
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  font-size: 20px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+/* logo real del proyecto dentro del mismo circulo dorado */
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.titulo-menu {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 24px 0 10px 4px;
+}
+
+.item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  padding: 11px 14px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+
+.item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.item.activo {
+  background: #3E5832;
+  color: #fff;
+}
+
+.item.activo .bi {
+  color: var(--color-dorado);
+}
+
+.usuario {
+  margin-top: auto;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.usuario strong, .usuario small {
+  display: block;
+}
+
+.salir {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+}
+
+.salir:hover {
+  color: var(--color-dorado);
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #F6EDD0;
+  color: var(--color-primario);
+  display: grid;
+  place-items: center;
+}

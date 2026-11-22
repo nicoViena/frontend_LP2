@@ -1,0 +1,118 @@
+<!-- ENCABEZADO -->
+<div class="mb-4">
+  <h1 class="titulo">{{ id ? 'Editar reserva' : 'Nueva reserva' }}</h1>
+  <p class="texto-suave mb-0">
+    @if (id) { <span class="id">#R-{{id}}</span> · }
+    Los campos obligatorios siguen las validaciones del backend
+  </p>
+</div>
+
+<div class="tarjeta">
+      <form [formGroup]="form" (ngSubmit)="guardar()">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="campo">ID de persona</label>
+            <input type="number" formControlName="idPersona" class="form-control" min="1" step="1">
+            <div class="form-text">Persona registrada en el sistema.</div>
+            @if (form.get('idPersona')?.touched && form.get('idPersona')?.invalid) {
+              <div class="form-text text-danger">Ingresa un ID válido</div>
+            }
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="campo">Cantidad de personas</label>
+            <input type="number" formControlName="cantidadPersonas" class="form-control" min="1" step="1">
+            @if (mesaSeleccionada(); as mesa) {
+              <div class="form-text">Máximo {{mesa.capacidad}} personas en {{mesa.nombre}}.</div>
+            }
+            @if (form.get('cantidadPersonas')?.errors?.['max']) {
+              <div class="form-text text-danger">La mesa elegida permite hasta {{mesaSeleccionada()?.capacidad}} personas</div>
+            } @else if (form.get('cantidadPersonas')?.touched && form.get('cantidadPersonas')?.invalid) {
+              <div class="form-text text-danger">Debe ser un número entero de al menos 1</div>
+            }
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="campo">Salón</label>
+            <select formControlName="idSalon" class="form-select">
+              <option [ngValue]="null" disabled>Selecciona un salón</option>
+              @for (s of salones; track s.idSalon) {
+                <option [ngValue]="s.idSalon">{{s.nombre}} {{s.estado !== 'DISPONIBLE' ? '(no disponible)' : ''}}</option>
+              }
+            </select>
+            @if (form.get('idSalon')?.touched && form.get('idSalon')?.invalid) {
+              <div class="form-text text-danger">Selecciona un salón</div>
+            }
+          </div>
+          <!-- la mesa es la que se envia al backend (idMesa); el salon solo filtra -->
+          <div class="col-md-6 mb-3">
+            <label class="campo">Mesa</label>
+            <select formControlName="idMesa" class="form-select">
+              <option [ngValue]="null" disabled>{{ form.get('idSalon')?.value ? 'Selecciona una mesa' : 'Primero elige un salón' }}</option>
+              @for (m of mesas; track m.idMesa) {
+                <option [ngValue]="m.idMesa" [disabled]="mesaBloqueada(m)">
+                  {{m.nombre}} · {{m.capacidad}} personas{{ mesaBloqueada(m) ? ' (ocupada)' : '' }}
+                </option>
+              }
+            </select>
+            @if (form.get('idSalon')?.value && mesas.length === 0) {
+              <div class="form-text text-danger">Este salón no tiene mesas registradas</div>
+            }
+            @if (form.get('idMesa')?.touched && form.get('idMesa')?.invalid) {
+              <div class="form-text text-danger">Selecciona una mesa</div>
+            }
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="campo">Fecha</label>
+            <input type="date" formControlName="fechaReserva" class="form-control">
+            @if (form.get('fechaReserva')?.touched && form.get('fechaReserva')?.invalid) {
+              <div class="form-text text-danger">La fecha es obligatoria</div>
+            }
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="campo">Hora</label>
+            <input type="time" formControlName="horaReserva" class="form-control">
+            @if (form.get('horaReserva')?.touched && form.get('horaReserva')?.invalid) {
+              <div class="form-text text-danger">La hora es obligatoria (formato HH:mm)</div>
+            }
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="campo">Estado</label>
+            @if (id) {
+              <select formControlName="estadoReserva" class="form-select">
+                @for (e of estados; track e) {
+                  <option [value]="e">{{e}}</option>
+                }
+              </select>
+            } @else {
+              <input type="text" class="form-control" value="PENDIENTE" disabled>
+              <div class="form-text">Toda reserva nueva inicia en PENDIENTE.</div>
+            }
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="campo">Motivo</label>
+          <input type="text" formControlName="motivo" class="form-control" maxlength="100">
+        </div>
+
+        @if (reserva) {
+          <div class="row text-center resumen py-2 mb-3 mx-0">
+            <div class="col">Total<br><strong>S/ {{reserva.total ?? 0 | number:'1.2-2'}}</strong></div>
+            <div class="col">Pagado<br><strong>S/ {{reserva.totalPagado ?? 0 | number:'1.2-2'}}</strong></div>
+            <div class="col">Saldo<br><strong>S/ {{reserva.saldoPendiente ?? 0 | number:'1.2-2'}}</strong></div>
+          </div>
+        } @else {
+          <div class="form-text mb-3">Al registrar, el backend genera un pago inicial pendiente de S/ 25.</div>
+        }
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-4 mt-4">
+          <a routerLink="/reservas" class="btn-claro text-decoration-none">Cancelar</a>
+          <button type="submit" class="btn-vimalu" [disabled]="form.invalid"><i class="bi bi-check-circle"></i> {{ id ? 'Guardar cambios' : 'Registrar reserva' }}</button>
+        </div>
+      </form>
+</div>

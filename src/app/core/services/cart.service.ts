@@ -95,4 +95,11 @@ export class CartService {
     this.saveCart();
   }
 
+  //despues de registrar la reserva en el backend se limpian la reserva y los productos
+  limpiarTodo(){
+    this.vaciarCarrito();
+    this.reserva.set(null);
+    localStorage.removeItem('reserva_vimalu');
+  }
+
 }

@@ -1,0 +1,77 @@
+<!-- PORTADA: foto real de la hacienda con un degradado oscuro encima -->
+<section class="portada">
+  <div class="contenido text-center text-white px-3">
+    <h1 class="titulo">Bienvenido a Hacienda VIMALU</h1>
+    <p class="subtitulo">Naturaleza, tradición y momentos inolvidables</p>
+    <a routerLink="/reserva" class="btn-reservar">
+      <i class="bi bi-calendar-check"></i> Reservar mesa
+    </a>
+  </div>
+</section>
+
+<!-- FAVORITOS: tarjetas solo informativas (sin precios ni ingredientes) -->
+<section class="seccion-crema">
+  <div class="container">
+    <h2 class="titulo-seccion">Los favoritos de nuestra casa</h2>
+    <div class="linea-dorada"></div>
+
+    <!-- dos tarjetas centradas del mismo ancho; en movil se apilan -->
+    <div class="row g-4 mt-2 justify-content-center">
+      <!-- Chaufa VIMALU: foto real, proporcion 4:5 sin recortes -->
+      <div class="col-md-6 col-lg-4">
+        <div class="tarjeta">
+          <div class="foto">
+            <img src="/images/chaufa-vimalu.webp" alt="Chaufa VIMALU">
+            <span class="etiqueta">Especialidad de la casa</span>
+          </div>
+          <div class="p-4">
+            <h3 class="titulo-tarjeta">Chaufa VIMALU</h3>
+            <p class="text-muted mb-0">Nuestro plato insignia, preparado en la cocina de la hacienda.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIMALU Fresh: espacio reservado para su foto -->
+      <div class="col-md-6 col-lg-4">
+        <div class="tarjeta">
+          <div class="foto foto-pendiente">
+            <i class="bi bi-flower1"></i>
+            <small>Fotografía próximamente</small>
+          </div>
+          <div class="p-4">
+            <h3 class="titulo-tarjeta">VIMALU Fresh</h3>
+            <p class="text-muted mb-0">Una propuesta fresca de la casa.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INFORMACION DE LA HACIENDA -->
+<section class="seccion-info">
+  <div class="container">
+    <h2 class="titulo-seccion">Disfruta la hacienda</h2>
+    <div class="linea-dorada"></div>
+
+    <!-- dos columnas iguales y centradas; en movil se apilan -->
+    <div class="row g-4 mt-2 text-center justify-content-center">
+      <div class="col-md-5">
+        <i class="bi bi-shop icono"></i>
+        <h4 class="titulo-tarjeta mt-3">Restaurante</h4>
+        <p class="text-muted">Cocina de la casa en un ambiente campestre.</p>
+      </div>
+      <div class="col-md-5">
+        <i class="bi bi-water icono"></i>
+        <h4 class="titulo-tarjeta mt-3">Piscina</h4>
+        <p class="text-muted">Un espacio para relajarse al aire libre.</p>
+      </div>
+    </div>
+
+    <div class="text-center mt-5">
+      <a routerLink="/reserva" class="btn-reservar">
+        <i class="bi bi-calendar-check"></i> Reservar mesa
+      </a>
+    </div>
+  </div>
+</section>

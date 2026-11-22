@@ -1,0 +1,188 @@
+<!-- ENCABEZADO -->
+<div class="mb-4">
+  <h1 class="titulo">Reportes</h1>
+  <p class="texto-suave mb-0">Información real de Oracle: procedimientos almacenados y consultas SQL</p>
+</div>
+
+<!-- PESTAÑAS -->
+<div class="pestanas mb-4 no-print">
+  <button [class.activo]="pestana === 'VENTAS'" (click)="pestana = 'VENTAS'"><i class="bi bi-bar-chart-line"></i> Ventas</button>
+  <button [class.activo]="pestana === 'PRODUCTOS'" (click)="pestana = 'PRODUCTOS'"><i class="bi bi-trophy"></i> Productos más vendidos</button>
+  <button [class.activo]="pestana === 'CLIENTES'" (click)="pestana = 'CLIENTES'"><i class="bi bi-people"></i> Clientes con más reservas</button>
+  <button [class.activo]="pestana === 'ESTADOS'" (click)="pestana = 'ESTADOS'"><i class="bi bi-pie-chart"></i> Estados de reservas</button>
+</div>
+
+<!-- FILTROS (solo Ventas y Productos) -->
+@if (pestana === 'VENTAS' || pestana === 'PRODUCTOS') {
+  <form [formGroup]="filtros" (ngSubmit)="consultar()" class="tarjeta mb-4 no-print">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="campo">Fecha inicial</label>
+        <input type="date" formControlName="fechaInicio" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="campo">Fecha final</label>
+        <input type="date" formControlName="fechaFin" class="form-control">
+      </div>
+      @if (pestana === 'VENTAS') {
+        <div class="col-md-3">
+          <label class="campo">Agrupación</label>
+          <select formControlName="agrupacion" class="form-select">
+            @for (a of agrupaciones; track a.valor) { <option [value]="a.valor">{{a.texto}}</option> }
+          </select>
+        </div>
+      }
+      <div class="col-md-3">
+        <button type="submit" class="btn-vimalu w-100" [disabled]="filtros.invalid || cargando">{{ cargando ? 'Consultando...' : 'Consultar' }}</button>
+      </div>
+    </div>
+  </form>
+}
+
+<!-- 1. VENTAS POR PERIODOS (SP_REPORTE_VENTAS_PERIODOS) -->
+@if (pestana === 'VENTAS') {
+  <div class="row g-4 mb-4">
+    <div class="col-md-4"><div class="tarjeta kpi"><span class="icono"><i class="bi bi-check-circle"></i></span><p class="etiqueta">Reservas terminadas</p><p class="valor">{{totalVentas()}}</p></div></div>
+    <div class="col-md-4"><div class="tarjeta kpi"><span class="icono"><i class="bi bi-currency-dollar"></i></span><p class="etiqueta">Ingresos</p><p class="valor">S/ {{totalIngresos() | number:'1.2-2'}}</p></div></div>
+    <div class="col-md-4"><div class="tarjeta kpi"><span class="icono"><i class="bi bi-graph-up"></i></span><p class="etiqueta">Promedio por venta</p><p class="valor">S/ {{promedio() | number:'1.2-2'}}</p></div></div>
+  </div>
+  <div class="tarjeta">
+    <h2 class="subtitulo">Ventas por período</h2>
+    <p class="texto-suave small">Procedimiento SP_REPORTE_VENTAS_PERIODOS · solo reservas TERMINADO</p>
+    @if (ventas.length > 0) {
+      <div class="grafico mb-4">
+        @for (v of ventas; track v.periodo; let ultimo = $last) {
+          <div class="columna" [title]="'S/ ' + v.ingresosTotales">
+            <small>{{v.ingresosTotales | number:'1.0-0'}}</small>
+            <div class="barra" [class.dorada]="ultimo" [style.height.%]="porcentaje(v.ingresosTotales, ingresosVentas())"></div>
+            <span>{{etiquetaPeriodo(v.periodo)}}</span>
+          </div>
+        }
+      </div>
+      <table class="tabla">
+        <thead><tr><th>Período</th><th class="text-end">Reservas terminadas</th><th class="text-end">Ingresos (S/)</th><th class="text-end">Promedio (S/)</th></tr></thead>
+        <tbody>
+          @for (v of ventas; track v.periodo) {
+            <tr>
+              <td>{{etiquetaPeriodo(v.periodo)}}</td>
+              <td class="text-end">{{v.reservasTerminadas}}</td>
+              <td class="text-end">{{v.ingresosTotales | number:'1.2-2'}}</td>
+              <td class="text-end">{{v.promedioVenta | number:'1.2-2'}}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p class="sin-datos">Sin datos</p>
+    }
+  </div>
+}
+
+<!-- 2. PRODUCTOS MAS VENDIDOS (SP_RANKING_PRODUCTOS_VENDIDOS) -->
+@if (pestana === 'PRODUCTOS') {
+  <div class="row g-4">
+    <div class="col-xl-5">
+      <div class="tarjeta h-100">
+        <h2 class="subtitulo">Top 5 productos</h2>
+        <p class="texto-suave small">Por unidades vendidas</p>
+        @for (p of top5(); track p.idProducto) {
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small"><span>{{p.producto}}</span><strong>{{p.unidadesVendidas}} u.</strong></div>
+            <div class="barra-fondo"><div class="barra-h" [style.width.%]="porcentaje(p.unidadesVendidas, unidadesTop5())"></div></div>
+          </div>
+        } @empty {
+          <p class="sin-datos">Sin datos</p>
+        }
+      </div>
+    </div>
+    <div class="col-xl-7">
+      <div class="tarjeta h-100">
+        <h2 class="subtitulo">Ranking de productos</h2>
+        <p class="texto-suave small">Procedimiento SP_RANKING_PRODUCTOS_VENDIDOS · solo reservas TERMINADO</p>
+        <table class="tabla">
+          <thead><tr><th>#</th><th>Producto</th><th class="text-end">Unidades</th><th class="text-end">Ingresos (S/)</th></tr></thead>
+          <tbody>
+            @for (p of productos; track p.idProducto; let i = $index) {
+              <tr>
+                <td>{{i + 1}}</td><td>{{p.producto}}</td>
+                <td class="text-end">{{p.unidadesVendidas}}</td>
+                <td class="text-end">{{p.ingresos | number:'1.2-2'}}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="sin-datos">Sin datos</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- 3. CLIENTES CON MAS RESERVAS (consulta SQL: PERSONA y RESERVA por ID_PERSONA) -->
+@if (pestana === 'CLIENTES') {
+  <div class="row g-4">
+    <div class="col-xl-5">
+      <div class="tarjeta h-100">
+        <h2 class="subtitulo">Top 5 clientes</h2>
+        <p class="texto-suave small">Por cantidad de reservas</p>
+        @for (c of top5Clientes(); track c.idPersona) {
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small"><span>{{c.nombre}}</span><strong>{{c.totalReservas}}</strong></div>
+            <div class="barra-fondo"><div class="barra-h" [style.width.%]="porcentaje(c.totalReservas, reservasTop5Clientes())"></div></div>
+          </div>
+        } @empty {
+          <p class="sin-datos">Sin datos</p>
+        }
+      </div>
+    </div>
+    <div class="col-xl-7">
+      <div class="tarjeta h-100">
+        <h2 class="subtitulo">Clientes con más reservas</h2>
+        <p class="texto-suave small">Consulta SQL: PERSONA y RESERVA · todas las reservas, sin filtros</p>
+        <table class="tabla">
+          <thead><tr><th>ID</th><th>Cliente</th><th class="text-end">Reservas</th></tr></thead>
+          <tbody>
+            @for (c of clientes; track c.idPersona) {
+              <tr><td class="id">{{c.idPersona}}</td><td>{{c.nombre}}</td><td class="text-end">{{c.totalReservas}}</td></tr>
+            } @empty {
+              <tr><td colspan="3" class="sin-datos">Sin datos</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- 4. ESTADOS DE RESERVAS (consulta SQL sobre RESERVA) -->
+@if (pestana === 'ESTADOS') {
+  <div class="tarjeta">
+    <h2 class="subtitulo">Estados de reservas</h2>
+    <p class="texto-suave small">Consulta SQL: RESERVA agrupada por ESTADO · todas las reservas</p>
+    @if (estados.length > 0) {
+      <div class="row g-4 align-items-center">
+        <div class="col-md-5">
+          <div class="donut" [style.background]="fondoDonut()">
+            <div class="centro"><strong>{{totalEstados()}}</strong><span>reservas</span></div>
+          </div>
+        </div>
+        <div class="col-md-7">
+          <table class="tabla">
+            <thead><tr><th>Estado</th><th class="text-end">Cantidad</th><th class="text-end">%</th></tr></thead>
+            <tbody>
+              @for (e of estados; track e.estado) {
+                <tr>
+                  <td><span class="estado" [class]="e.estado.toLowerCase()">{{e.estado}}</span></td>
+                  <td class="text-end">{{e.cantidad}}</td>
+                  <td class="text-end texto-suave">{{e.cantidad / totalEstados() * 100 | number:'1.1-1'}}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    } @else {
+      <p class="sin-datos">Sin datos</p>
+    }
+  </div>
+}

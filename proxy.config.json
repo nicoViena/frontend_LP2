@@ -1,11 +1,11 @@
 {
     "/api":{
-        "target":"http://localhost:8090/hacienda_vimalu",
+        "target":"http://localhost:8085/hacienda_vimalu",
         "secure":false,
         "logLevel":"debug"
     },
     "/hacienda_vimalu/images":{
-        "target":"http://localhost:8090",
+        "target":"http://localhost:8085",
         "secure":false,
         "logLevel":"debug"
     }

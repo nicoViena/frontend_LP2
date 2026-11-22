@@ -1,0 +1,39 @@
+<div class="admin auth-pagina">
+  <div class="tarjeta auth-tarjeta">
+    <div class="text-center mb-4">
+      <span class="auth-logo"><img src="favicon.ico" alt="Logo Hacienda VIMALU"></span>
+      <h1 class="auth-titulo">Hacienda VIMALU</h1>
+      <p class="texto-suave mb-0">Inicia sesión para continuar</p>
+    </div>
+
+    @if (!loginDisponible) {
+      <div class="aviso mb-4">
+        <i class="bi bi-info-circle"></i> El inicio de sesión está pendiente: el backend actual todavía no tiene el servicio de login.
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="iniciarSesion()">
+      <div class="mb-3">
+        <label class="campo">Usuario</label>
+        <input type="text" formControlName="usuario" class="form-control" autocomplete="username">
+        @if (form.get('usuario')?.touched && form.get('usuario')?.invalid) {
+          <small class="text-danger">Ingresa tu usuario</small>
+        }
+      </div>
+      <div class="mb-4">
+        <label class="campo">Contraseña</label>
+        <input type="password" formControlName="password" class="form-control" autocomplete="current-password">
+        @if (form.get('password')?.touched && form.get('password')?.invalid) {
+          <small class="text-danger">Ingresa tu contraseña</small>
+        }
+      </div>
+      <button type="submit" class="btn-vimalu w-100" [disabled]="cargando">
+        <i class="bi bi-box-arrow-in-right"></i> {{ cargando ? 'Ingresando...' : 'Iniciar sesión' }}
+      </button>
+    </form>
+
+    <p class="text-center small mt-4 mb-0">
+      ¿No tienes cuenta? <a routerLink="/registro" class="id">Regístrate</a>
+    </p>
+  </div>
+</div>

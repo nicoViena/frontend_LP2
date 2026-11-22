@@ -1,0 +1,13 @@
+.pagina {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-crema);
+  font-family: "Inter", sans-serif;
+  color: #1E2B23;
+}
+
+.contenido {
+  flex: 1;
+  padding: 36px 32px;
+  min-width: 0;
+}

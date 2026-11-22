@@ -1,0 +1,198 @@
+<!-- ENCABEZADO -->
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+  <div>
+    <h1 class="titulo">Gestión de Reservas</h1>
+    <p class="texto-suave mb-0">Administra, filtra y da seguimiento a las reservas de Hacienda VIMALU</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a routerLink="/reportes" class="btn-claro text-decoration-none"><i class="bi bi-bar-chart-line"></i> Reportes</a>
+    <a routerLink="/reservas/nuevo" class="btn-vimalu text-decoration-none"><i class="bi bi-plus-lg"></i> Nueva Reserva</a>
+  </div>
+</div>
+
+<!-- TARJETAS -->
+<div class="row g-4 mb-4">
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <span class="icono"><i class="bi bi-calendar3"></i></span>
+      <p class="etiqueta">Total</p>
+      <p class="valor">{{reservas.length}}</p>
+      <p class="texto-suave small mb-0">reservas registradas</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <span class="icono"><i class="bi bi-clock"></i></span>
+      <p class="etiqueta">Pendientes</p>
+      <p class="valor">{{cantidad('PENDIENTE')}}</p>
+      <p class="texto-suave small mb-0">por confirmar</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <span class="icono"><i class="bi bi-calendar-check"></i></span>
+      <p class="etiqueta">Confirmadas</p>
+      <p class="valor">{{cantidad('CONFIRMADO')}}</p>
+      <p class="texto-suave small mb-0">con mesa reservada</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="tarjeta kpi">
+      <span class="icono"><i class="bi bi-check-circle"></i></span>
+      <p class="etiqueta">Terminadas</p>
+      <p class="valor">{{cantidad('TERMINADO')}}</p>
+      <p class="texto-suave small mb-0">atendidas en el restaurante</p>
+    </div>
+  </div>
+</div>
+
+<!-- FILTROS -->
+<div class="tarjeta mb-4">
+  <div class="row g-3 align-items-end">
+    <div class="col-lg-4">
+      <label class="campo">Fecha</label>
+      <div class="d-flex align-items-center gap-2">
+        <input type="date" class="form-control" [(ngModel)]="desde" (ngModelChange)="filtrar()" aria-label="Desde">
+        <span>–</span>
+        <input type="date" class="form-control" [(ngModel)]="hasta" (ngModelChange)="filtrar()" aria-label="Hasta">
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <label class="campo">Buscar</label>
+      <div class="position-relative">
+        <i class="bi bi-search lupa"></i>
+        <input type="search" class="form-control ps-5" placeholder="Buscar por cliente o ID de reserva..." [(ngModel)]="busqueda" (ngModelChange)="filtrar()">
+      </div>
+    </div>
+    <div class="col-lg-2">
+      <label class="campo">Estado</label>
+      <select class="form-select" [(ngModel)]="estado" (ngModelChange)="filtrar()">
+        <option value="">Todos los estados</option>
+        @for (e of estados; track e) { <option [value]="e">{{e}}</option> }
+      </select>
+    </div>
+    <div class="col-lg-2">
+      <button class="btn-claro w-100" (click)="limpiarFiltros()"><i class="bi bi-x-lg"></i> Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LISTADO -->
+<div class="tarjeta">
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <h2 class="subtitulo">Listado de reservas</h2>
+      <p class="texto-suave small mb-0">Ordenado por fecha de reserva · más recientes primero</p>
+    </div>
+    <span class="id small">{{reservasFiltradas().length}} resultados</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>ID</th><th>Cliente</th><th>Fecha</th><th>Hora</th><th>Salón</th><th class="text-center">Personas</th>
+          <th>Estado</th><th class="text-end">Total (S/)</th><th class="text-end">Saldo (S/)</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of paginaActual(); track r.idReserva) {
+          <tr>
+            <td class="id">#R-{{r.idReserva}}</td>
+            <td><span class="d-block fw-medium">{{r.nombre}}</span><small class="texto-suave">Persona {{r.idPersona}}</small></td>
+            <td>{{fechaCorta(r.fechaReserva)}}</td>
+            <td>{{r.horaReserva}}</td>
+            <td>{{nombreSalon(r.idSalon)}}</td>
+            <td class="text-center">{{r.cantPersonas}}</td>
+            <td><span class="estado" [class]="r.estadoReserva.toLowerCase()">{{r.estadoReserva}}</span></td>
+            <td class="text-end">{{r.total ?? 0 | number:'1.2-2'}}</td>
+            <td class="text-end" [class.text-danger]="(r.saldoPendiente ?? 0) > 0">{{r.saldoPendiente ?? 0 | number:'1.2-2'}}</td>
+            <td class="text-nowrap">
+              <button class="accion me-1" title="Ver detalle" (click)="detalle = r"><i class="bi bi-eye"></i></button>
+              <a class="accion editar d-inline-grid me-1" title="Editar" [routerLink]="['/reservas/editar', r.idReserva]"><i class="bi bi-pencil"></i></a>
+              <button class="accion eliminar" title="Eliminar" (click)="eliminar(r)"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="10" class="sin-datos">{{ reservas.length === 0 ? 'Sin datos' : 'Ninguna reserva coincide con los filtros' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (reservasFiltradas().length > 0) {
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+      <small class="texto-suave">
+        Mostrando {{(pagina - 1) * porPagina + 1}}–{{(pagina - 1) * porPagina + paginaActual().length}} de {{reservasFiltradas().length}} reservas
+      </small>
+      <div class="paginacion">
+        <button [disabled]="pagina === 1" (click)="pagina = pagina - 1"><i class="bi bi-chevron-left"></i></button>
+        @for (n of paginas(); track n) {
+          <button [class.activo]="n === pagina" (click)="pagina = n">{{n}}</button>
+        }
+        <button [disabled]="pagina === totalPaginas()" (click)="pagina = pagina + 1"><i class="bi bi-chevron-right"></i></button>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- MODAL DETALLE -->
+@if (detalle) {
+  <div class="modal-fondo" (click)="detalle = null">
+    <div class="modal-caja" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-start pb-3 mb-4 border-bottom">
+        <div>
+          <h3>Detalle de reserva</h3>
+          <span class="id">#R-{{detalle.idReserva}}</span>
+          <span class="estado ms-2" [class]="detalle.estadoReserva.toLowerCase()">{{detalle.estadoReserva}}</span>
+        </div>
+        <button class="cerrar" (click)="detalle = null"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <p class="seccion">INFORMACIÓN DE LA RESERVA</p>
+      <div class="row g-3 mb-4">
+        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-person"></i></span><div><small>Cliente</small><strong>{{detalle.nombre}}</strong></div></div></div>
+        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-person-vcard"></i></span><div><small>ID de persona</small><strong>{{detalle.idPersona}}</strong></div></div></div>
+        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-people"></i></span><div><small>Personas</small><strong>{{detalle.cantPersonas}} personas</strong></div></div></div>
+        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-calendar3"></i></span><div><small>Fecha</small><strong>{{fechaCorta(detalle.fechaReserva)}}</strong></div></div></div>
+        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-clock"></i></span><div><small>Hora</small><strong>{{detalle.horaReserva}}</strong></div></div></div>
+        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-building"></i></span><div><small>Salón</small><strong>{{nombreSalon(detalle.idSalon)}}</strong></div></div></div>
+        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-check-circle"></i></span><div><small>Motivo</small><strong>{{detalle.motivo || '-'}}</strong></div></div></div>
+      </div>
+
+      <p class="seccion">PAGOS REGISTRADOS</p>
+      <table class="tabla mb-3">
+        <thead><tr><th>Tipo</th><th>Medio de pago</th><th>Fecha</th><th>Estado</th><th class="text-end">Monto (S/)</th></tr></thead>
+        <tbody>
+          @for (p of pagosDe(detalle); track p.idPago) {
+            <tr>
+              <td>{{p.tipoComprobante === 'RESERVA' ? 'Pago de reserva' : (p.tipoComprobante || 'Pago')}}</td>
+              <td>{{p.tipoPago === 'POR_DEFINIR' ? 'Por definir' : p.tipoPago}}</td>
+              <td>{{fechaCorta(p.fechaPago)}}</td>
+              <td><span class="estado" [class]="p.estado === 'PAGADO' ? 'confirmado' : 'pendiente'">{{p.estado}}</span></td>
+              <td class="text-end">{{p.monto | number:'1.2-2'}}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="sin-datos py-3">Sin pagos registrados</td></tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="row align-items-end">
+        <div class="col-md-6">
+          <small class="texto-suave">El backend genera un pago de reserva de S/ 25 pendiente al registrar la reserva. Solo los pagos en estado PAGADO descuentan el saldo.</small>
+        </div>
+        <div class="col-md-6">
+          <div class="d-flex justify-content-between py-1"><span>Total de la reserva</span><strong>S/ {{detalle.total ?? 0 | number:'1.2-2'}}</strong></div>
+          <div class="d-flex justify-content-between py-1"><span class="texto-suave">Total pagado</span><span class="id">- S/ {{detalle.totalPagado ?? 0 | number:'1.2-2'}}</span></div>
+          <div class="saldo d-flex justify-content-between"><strong>Saldo pendiente</strong><strong class="text-danger">S/ {{detalle.saldoPendiente ?? 0 | number:'1.2-2'}}</strong></div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 border-top pt-4 mt-4">
+        <button class="btn-claro" (click)="detalle = null">Cerrar</button>
+        <a class="btn-vimalu text-decoration-none" [routerLink]="['/reservas/editar', detalle.idReserva]"><i class="bi bi-pencil"></i> Editar reserva</a>
+      </div>
+    </div>
+  </div>
+}

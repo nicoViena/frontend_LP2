@@ -1,4 +1,6 @@
 <div class="container mt-4">
+    <!-- BARRA DE PROGRESO: paso 3 (Productos) -->
+    <app-pasos-reserva [paso]="3"></app-pasos-reserva>
     <!-- RESUMEN DE LA RESERVA -->
     @if (reserva) {
         <div class="card border-0 shadow-sm mb-4">
@@ -6,7 +8,7 @@
                 <div>
                     <h5 class="mb-1 text-vimalu-primary">{{reserva.nombre}}</h5>
                     <small class="text-muted">
-                        <i class="bi bi-house-door"></i> {{reserva.nombreSalon}} ·
+                        <i class="bi bi-house-door"></i> {{reserva.nombreSalon}}@if (reserva.nombreMesa) { · {{reserva.nombreMesa}} } ·
                         <i class="bi bi-calendar-event"></i> {{reserva.fechaReserva}} ·
                         <i class="bi bi-clock"></i> {{reserva.horaReserva}} ·
                         <i class="bi bi-people"></i> {{reserva.cantPersonas}} personas
@@ -25,7 +27,7 @@
     <h2 class="text-vimalu-primary mb-4">Nuestro catalogo de productos</h2>
     <p class="text-muted">Los productos son opcionales. Puedes ir al carrito sin agregar ninguno.</p>
     <div class="row">
-        @for (prod of productos; track prod.idProducto){
+        @for (prod of productosFiltrados(); track prod.idProducto){
             <div class="col-md-4 mb-4">
                 <div class="card h-100 shadow-sm">
                     @if (prod.imagen) {
@@ -60,6 +62,14 @@
                     </div>
                 </div>
             </div>
+        } @empty {
+            @if (productoService.busqueda()) {
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="bi bi-search fs-1"></i>
+                    <h5 class="mt-3">No se encontraron productos</h5>
+                    <button class="btn btn-outline-secondary btn-sm mt-2" (click)="productoService.busqueda.set('')">Ver todos los productos</button>
+                </div>
+            }
         }
     </div>
 </div>

@@ -1,0 +1,17 @@
+.modal-caja.detalle {
+  max-width: 620px;
+}
+
+.dato {
+  background: var(--color-crema);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.dato small {
+  display: block;
+}
+
+.dato strong {
+  font-size: 17px;
+}

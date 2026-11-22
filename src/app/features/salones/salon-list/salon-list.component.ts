@@ -1,51 +1,75 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { SalonService } from '../../../core/services/salon.service';
-import { MesaService } from '../../../core/services/mesa.service';
-import { Salon } from '../../../core/interfaces/salon.interface';
-import { Mesa } from '../../../core/interfaces/mesa.interface';
 import { AlertService } from '../../../core/service/alert.service';
+import { SalonNuevo } from '../../../core/interfaces/salon-mesa.interface';
+import { SalonFormComponent } from '../salon-form/salon-form.component';
 
 @Component({
   selector: 'app-salon-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, SalonFormComponent],
   templateUrl: './salon-list.component.html',
   styleUrl: './salon-list.component.css'
 })
 export class SalonListComponent implements OnInit {
   private salonService = inject(SalonService);
-  private mesaService = inject(MesaService);
-  private alertService = inject(AlertService)
-  salones: Salon[]=[];
-  mesas: Mesa[]=[];
+  private alertService = inject(AlertService);
+
+  salones: SalonNuevo[] = [];
+  cargando = true;
+  errorCarga = false;
+
+  //modales
+  detalle: SalonNuevo | null = null;
+  formularioAbierto = false;
+  enEdicion: SalonNuevo | null = null;
 
   ngOnInit(): void {
-    this.listSalones();
+    this.cargarSalones();
   }
 
-  listSalones(){
-    this.salonService.getSalones().subscribe
-    (data=> this.salones=data);
-    this.mesaService.getMesas().subscribe
-    (data=> this.mesas=data);
+  //GET /api/salones: se vuelve a llamar despues de guardar o eliminar
+  cargarSalones(){
+    this.salonService.listarSalones().subscribe({
+      next:(data)=>{
+        this.salones = data;
+        this.cargando = false;
+        this.errorCarga = false;
+      },
+      error:()=>{
+        this.cargando = false;
+        this.errorCarga = true;
+      }
+    });
   }
 
-  mesaDe(salon: Salon){
-    return this.mesas.find(m => m.idMesa === salon.idMesa);
+  nuevo(){
+    this.enEdicion = null;
+    this.formularioAbierto = true;
   }
 
-  async eliminar(id:number){
-    const confirmado = await this.alertService.confirm('Las mesas del salón volverán a quedar libres');
-    if(confirmado) {
-      //el backend no permite eliminar salones con reservas y responde con un mensaje
-      this.salonService.eliminarSalon(id).subscribe({
-        next: ()=>{
-          this.alertService.toast('Salón Eliminado')
-          this.listSalones()
-        }, error: (err) => this.alertService.error(err.error?.mensaje ?? 'No se pudo eliminar el salón')
-      });
-    }
+  editar(s: SalonNuevo){
+    this.detalle = null;
+    this.enEdicion = s;
+    this.formularioAbierto = true;
+  }
+
+  guardado(){
+    this.formularioAbierto = false;
+    this.cargarSalones();
+  }
+
+  //DELETE /api/salones/{id}: el backend no permite borrar un salon que tiene mesas
+  async eliminar(s: SalonNuevo){
+    const confirmado = await this.alertService.confirm(`Se eliminará el salón "${s.nombre}". Esta acción no se puede deshacer`);
+    if(!confirmado) return;
+    this.salonService.eliminarSalon(s.idSalon!).subscribe({
+      next:()=>{
+        this.alertService.toast('Salón eliminado');
+        this.cargarSalones();
+      },
+      error:(err)=> this.alertService.error(err.error?.mensaje ?? 'No se pudo eliminar el salón')
+    });
   }
 }

@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { forkJoin, Observable } from 'rxjs';
-import { Salon, SalonRequest } from '../interfaces/salon.interface';
+import { Salon } from '../interfaces/salon.interface';
+import { SalonNuevo } from '../interfaces/salon-mesa.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -24,13 +25,17 @@ export class SalonService {
     return this.http.get<Salon>(`${this.apiUrl}/${id}/disponibilidad`, {params:{fecha}});
   }
 
-  //Para el admin
-  crearSalon(salon: SalonRequest):Observable<Salon>{
-    return this.http.post<Salon>(this.apiUrl, salon);
+  //Para el admin (Gestion de Salones): estructura del SalonDTO
+  listarSalones():Observable<SalonNuevo[]>{
+    return this.http.get<SalonNuevo[]>(this.apiUrl);
   }
 
-  actualizarSalon(id:number, salon: SalonRequest):Observable<Salon>{
-    return this.http.put<Salon>(`${this.apiUrl}/${id}`, salon);
+  crearSalon(salon: SalonNuevo):Observable<SalonNuevo>{
+    return this.http.post<SalonNuevo>(this.apiUrl, salon);
+  }
+
+  actualizarSalon(id:number, salon: SalonNuevo):Observable<SalonNuevo>{
+    return this.http.put<SalonNuevo>(`${this.apiUrl}/${id}`, salon);
   }
 
   eliminarSalon(id:number):Observable<void>{

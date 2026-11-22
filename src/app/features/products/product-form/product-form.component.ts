@@ -1,28 +1,33 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProductoService } from '../../../core/services/producto.service';
 import { AlertService } from '../../../core/service/alert.service';
+import { Producto } from '../../../core/interfaces/producto.interface';
 
+//Modal para registrar (producto = null) o editar un producto
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.css'
 })
 export class ProductFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private productoService = inject(ProductoService);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
   private alertService = inject(AlertService);
+
+  @Input() producto: Producto | null = null;
+  @Input() categorias: string[] = [];
+  //true cuando se guardo, para que el listado se recargue
+  @Output() cerrar = new EventEmitter<boolean>();
 
   form: FormGroup;
   id:number | null = null;
   fotoSeleccionada: File | null = null;
   imagenInvalida = false;
+  guardando = false;
 
   constructor(){
     this.form = this.fb.group({
@@ -35,18 +40,16 @@ export class ProductFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.id = Number(this.route.snapshot.paramMap.get('id'));
-    if(this.id){
-      this.productoService.getProductoById(this.id).subscribe(p =>{
-        this.form.patchValue(p)
-      })
+    if(this.producto){
+      this.id = this.producto.idProducto ?? null;
+      this.form.patchValue(this.producto);
     }
   }
-  //validacion peso de la imagen
+
   onFileSelected(event:any){
     const file: File | undefined = event.target.files[0];
     //el backend acepta imagenes de hasta 1 MB
-    if(file && file.size > (1024 * 1024)){
+    if(file && file.size > 1024 * 1024){
       this.alertService.error('La imagen supera 1 MB. Selecciona otra imagen');
       event.target.value = '';
       this.fotoSeleccionada = null;
@@ -56,6 +59,7 @@ export class ProductFormComponent implements OnInit {
     this.fotoSeleccionada = file ?? null;
     this.imagenInvalida = false;
   }
+
   guardar(){
     if(this.form.invalid) return;
     if(this.imagenInvalida){
@@ -80,11 +84,14 @@ export class ProductFormComponent implements OnInit {
     const request = this.id
     ? this.productoService.actualizarProducto(this.id, formData)
     : this.productoService.crearProducto(formData)
+    this.guardando = true;
     request.subscribe({
       next:() =>{
+        this.guardando = false;
         this.alertService.success(this.id ? 'Producto Actualizado':'Producto Creado');
-        this.router.navigate(['/productos']);
+        this.cerrar.emit(true);
       }, error:(err)=> {
+        this.guardando = false;
         if(err.status === 413){
           this.alertService.error('La imagen es demasiado pesada. El tamaño máximo permitido es 1 MB');
         } else {

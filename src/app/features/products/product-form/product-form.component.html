@@ -1,43 +1,89 @@
-<div class="container mt-4">
-  <div class="card shadow">
-    <div class="card-header bg-vimalu-primary text-white">
-      <h4>{{ id ? 'Editar' : 'Nuevo' }} Producto</h4>
+<div class="modal-fondo" (click)="cerrar.emit(false)">
+  <div class="modal-caja" (click)="$event.stopPropagation()">
+    <div class="d-flex justify-content-between align-items-start pb-3 mb-4 border-bottom">
+      <div>
+        <h3>{{ id ? 'Editar producto' : 'Nuevo producto' }}</h3>
+        <small class="texto-suave">
+          @if (id) { <span class="id">P-{{id.toString().padStart(3, '0')}}</span> · }
+          Los campos con * son obligatorios
+        </small>
+      </div>
+      <button type="button" class="cerrar" (click)="cerrar.emit(false)"><i class="bi bi-x-lg"></i></button>
     </div>
-    <div class="card-body">
-      <form [formGroup]="form" (ngSubmit)="guardar()">
-        <div class="mb-3">
-          <label class="form-label">Nombre</label>
-          <input type="text" formControlName="nombre" class="form-control">
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Descripción</label>
-          <textarea formControlName="descripcion" class="form-control"></textarea>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Categoría</label>
-          <input type="text" formControlName="categoria" class="form-control" maxlength="20">
-        </div>
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Precio</label>
-            <input type="number" formControlName="precio" class="form-control">
+
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      <div class="row g-4">
+        <!-- IMAGEN -->
+        <div class="col-md-5">
+          <label class="campo">Imagen {{ id ? '' : '*' }}</label>
+          <div class="zona-imagen">
+            <div class="vista">
+              @if (fotoSeleccionada) {
+                <i class="bi bi-image fs-1"></i>
+                <span class="id small">{{fotoSeleccionada.name}}</span>
+              } @else if (producto?.imagen) {
+                <img [src]="producto?.imagen" alt="Imagen actual">
+              } @else {
+                <i class="bi bi-image fs-1"></i>
+                <span class="small">Sin imagen</span>
+              }
+            </div>
+            <label class="btn-claro w-100 text-center mt-3 mb-0">
+              <i class="bi bi-upload"></i> {{ id ? 'Cambiar imagen' : 'Subir imagen' }}
+              <input type="file" class="d-none" (change)="onFileSelected($event)" accept="image/png, image/jpeg, image/gif">
+            </label>
           </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Stock</label>
-            <input type="number" formControlName="stock" class="form-control">
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Imagen</label>
-          <input type="file" (change)="onFileSelected($event)" class="form-control" accept="image/png, image/jpeg, image/gif">
-          <div class="form-text">PNG, JPG o GIF de hasta 1 MB.</div>
+          <small class="texto-suave">Formatos PNG, JPG o GIF. Peso máximo 1 MB.</small>
         </div>
 
-        <div class="mt-4">
-          <button type="submit" class="btn btn-primary me-2" [disabled]="form.invalid || imagenInvalida || (!id && !fotoSeleccionada)">Guardar</button>
-          <a routerLink="/productos" class="btn btn-secondary">Cancelar</a>
+        <!-- DATOS -->
+        <div class="col-md-7">
+          <div class="mb-3">
+            <label class="campo">Nombre *</label>
+            <input type="text" formControlName="nombre" class="form-control" maxlength="100">
+            @if (form.get('nombre')?.touched && form.get('nombre')?.invalid) {
+              <small class="text-danger">Obligatorio, entre 3 y 100 caracteres</small>
+            }
+          </div>
+          <div class="mb-3">
+            <label class="campo">Descripción</label>
+            <textarea formControlName="descripcion" class="form-control" rows="3" maxlength="500"></textarea>
+          </div>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="campo">Categoría</label>
+              <input type="text" formControlName="categoria" class="form-control" maxlength="20" list="categorias">
+              <datalist id="categorias">
+                @for (c of categorias; track c) { <option [value]="c"></option> }
+              </datalist>
+            </div>
+            <div class="col-sm-6">
+              <label class="campo">Precio (S/) *</label>
+              <input type="number" formControlName="precio" class="form-control" min="0.01" step="0.01">
+              @if (form.get('precio')?.invalid) { <small class="text-danger">Debe ser mayor a 0</small> }
+            </div>
+            <div class="col-sm-6">
+              <label class="campo">Stock *</label>
+              <input type="number" formControlName="stock" class="form-control" min="0" step="1">
+              @if (form.get('stock')?.invalid) { <small class="text-danger">Debe ser 0 o más</small> }
+            </div>
+            <div class="col-sm-6">
+              <label class="campo">Disponibilidad</label>
+              <div class="disponibilidad">
+                <span class="estado" [class]="form.value.stock > 0 ? 'disponible' : 'agotado'">{{ form.value.stock > 0 ? 'DISPONIBLE' : 'AGOTADO' }}</span>
+              </div>
+            </div>
+          </div>
+          <small class="texto-suave d-block mt-2">La disponibilidad se actualiza según el stock: con stock 0 el producto figura como Agotado.</small>
         </div>
-      </form>
-    </div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 border-top pt-4 mt-4">
+        <button type="button" class="btn-claro" (click)="cerrar.emit(false)">Cancelar</button>
+        <button type="submit" class="btn-vimalu" [disabled]="form.invalid || imagenInvalida || (!id && !fotoSeleccionada) || guardando">
+          <i class="bi bi-check-circle"></i> {{ id ? 'Guardar cambios' : 'Registrar producto' }}
+        </button>
+      </div>
+    </form>
   </div>
 </div>
