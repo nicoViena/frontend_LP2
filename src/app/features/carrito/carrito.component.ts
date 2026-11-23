@@ -1,9 +1,9 @@
 import { PasosReservaComponent } from '../../shared/pasos-reserva/pasos-reserva.component';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CartService } from '../../core/services/cart.service';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { DatosReserva, ReservaResponseDTO } from '../../core/interfaces/reserva.interface';
+import { Router, RouterLink } from '@angular/router';
+import { DatosReserva } from '../../core/interfaces/reserva.interface';
 import { ReservaService } from '../../core/services/reserva.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AlertService } from '../../core/service/alert.service';
@@ -15,32 +15,62 @@ import { AlertService } from '../../core/service/alert.service';
   templateUrl: './carrito.component.html',
   styleUrl: './carrito.component.css'
 })
-export class CarritoComponent implements OnInit {
+export class CarritoComponent implements OnInit, OnDestroy {
   public cartService = inject(CartService);
   private reservaService = inject(ReservaService);
   private authService = inject(AuthService);
   private alertService = inject(AlertService);
+  private router = inject(Router);
 
   reserva: DatosReserva | null = null;
   //evita enviar la reserva dos veces con clics repetidos
   enviando = false;
-  //respuesta real del backend; se muestra como resumen de confirmacion
-  confirmada: ReservaResponseDTO | null = null;
-  //datos para el resumen (el carrito se limpia al confirmar)
-  resumen: DatosReserva | null = null;
+  //pago de separacion de S/ 25
+  medio: 'YAPE' | 'PLIN' | null = null;
+  archivo: File | null = null;
+  vistaPrevia: string | null = null;
 
   ngOnInit(): void {
     //sin datos de reserva se muestra el carrito vacio
     this.reserva = this.cartService.getReserva();
   }
 
-  //POST /api/reservas: el backend registra en una sola operacion la reserva,
-  //sus detalles (descontando stock) y el pago inicial de S/ 25 en estado PENDIENTE
+  ngOnDestroy(): void {
+    this.liberarVistaPrevia();
+  }
+
+  //validacion rapida en el navegador; el backend vuelve a revisar el contenido real del archivo
+  elegirArchivo(input: HTMLInputElement){
+    const archivo = input.files?.[0] ?? null;
+    this.liberarVistaPrevia();
+    this.archivo = null;
+    if(!archivo) return;
+    if(!['image/jpeg', 'image/png', 'image/webp'].includes(archivo.type)){
+      this.alertService.error('El comprobante debe ser una imagen JPG, PNG o WEBP');
+      input.value = '';
+      return;
+    }
+    if(archivo.size > 1024 * 1024){
+      this.alertService.error('La imagen debe pesar hasta 1 MB');
+      input.value = '';
+      return;
+    }
+    this.archivo = archivo;
+    this.vistaPrevia = URL.createObjectURL(archivo);
+  }
+
+  //POST /api/reservas (multipart): en una sola operacion el backend guarda la reserva (PENDIENTE),
+  //sus productos (descontando stock), el pago de S/ 25 (POR_VERIFICAR) y el comprobante.
+  //Si algo falla no se guarda nada.
   confirmarReserva(){
     const reserva = this.reserva;
     if(!reserva || this.enviando) return;
     if(!reserva.idMesa){
       this.alertService.error('Elige una mesa en el formulario de reserva', 'Falta la mesa');
+      return;
+    }
+    if(!this.medio || !this.archivo){
+      this.alertService.error('Elige Yape o Plin y adjunta la captura de tu voucher', 'Falta el voucher');
       return;
     }
     const idPersona = this.authService.getIdPersona();
@@ -49,7 +79,7 @@ export class CarritoComponent implements OnInit {
       return;
     }
     this.enviando = true;
-    this.reservaService.crearReserva({
+    this.reservaService.crearReservaConComprobante({
       idPersona,
       idMesa: reserva.idMesa,
       fechaReserva: reserva.fechaReserva,
@@ -60,18 +90,17 @@ export class CarritoComponent implements OnInit {
         idProducto: item.producto.idProducto!,
         cantidad: item.cantidad
       }))
-    }).subscribe({
-      next:(respuesta)=>{
+    }, this.medio, this.archivo).subscribe({
+      next:()=>{
         this.enviando = false;
-        this.resumen = reserva;
-        this.confirmada = respuesta;
         this.cartService.limpiarTodo();
         this.reserva = null;
-        this.alertService.toast('Reserva registrada');
+        this.alertService.success('Tu reserva quedó PENDIENTE y tu voucher será revisado por un administrador. Puedes ver el estado en Mis Reservas.', 'Reserva registrada');
+        this.router.navigate(['/mis-reservas']);
       },
       error:(err)=>{
         this.enviando = false;
-        //mensajes del backend: mesa ocupada, capacidad insuficiente, stock insuficiente, etc.
+        //mensajes del backend: mesa ocupada, capacidad o stock insuficiente, imagen no valida, etc.
         if(err.status === 0 || err.status >= 500){
           this.alertService.error('No se pudo conectar con el servidor. La reserva no fue registrada');
         } else {
@@ -79,5 +108,10 @@ export class CarritoComponent implements OnInit {
         }
       }
     });
+  }
+
+  private liberarVistaPrevia(){
+    if(this.vistaPrevia) URL.revokeObjectURL(this.vistaPrevia);
+    this.vistaPrevia = null;
   }
 }

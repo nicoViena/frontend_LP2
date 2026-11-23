@@ -99,16 +99,16 @@
         @for (r of paginaActual(); track r.idReserva) {
           <tr>
             <td class="id">#R-{{r.idReserva}}</td>
-            <td><span class="d-block fw-medium">{{r.nombre}}</span><small class="texto-suave">Persona {{r.idPersona}}</small></td>
+            <td><span class="d-block fw-medium">{{nombreCliente(r.idPersona)}}</span><small class="texto-suave">Persona {{r.idPersona}}</small></td>
             <td>{{fechaCorta(r.fechaReserva)}}</td>
             <td>{{r.horaReserva}}</td>
-            <td>{{nombreSalon(r.idSalon)}}</td>
-            <td class="text-center">{{r.cantPersonas}}</td>
+            <td><span class="d-block">{{nombreSalon(r.idMesa)}}</span><small class="texto-suave">{{nombreMesa(r.idMesa)}}</small></td>
+            <td class="text-center">{{r.cantidadPersonas}}</td>
             <td><span class="estado" [class]="r.estadoReserva.toLowerCase()">{{r.estadoReserva}}</span></td>
             <td class="text-end">{{r.total ?? 0 | number:'1.2-2'}}</td>
             <td class="text-end" [class.text-danger]="(r.saldoPendiente ?? 0) > 0">{{r.saldoPendiente ?? 0 | number:'1.2-2'}}</td>
             <td class="text-nowrap">
-              <button class="accion me-1" title="Ver detalle" (click)="detalle = r"><i class="bi bi-eye"></i></button>
+              <button class="accion me-1" title="Ver detalle" (click)="abrirDetalle(r)"><i class="bi bi-eye"></i></button>
               <a class="accion editar d-inline-grid me-1" title="Editar" [routerLink]="['/reservas/editar', r.idReserva]"><i class="bi bi-pencil"></i></a>
               <button class="accion eliminar" title="Eliminar" (click)="eliminar(r)"><i class="bi bi-trash"></i></button>
             </td>
@@ -138,7 +138,7 @@
 
 <!-- MODAL DETALLE -->
 @if (detalle) {
-  <div class="modal-fondo" (click)="detalle = null">
+  <div class="modal-fondo" (click)="cerrarDetalle()">
     <div class="modal-caja" (click)="$event.stopPropagation()">
       <div class="d-flex justify-content-between align-items-start pb-3 mb-4 border-bottom">
         <div>
@@ -146,41 +146,82 @@
           <span class="id">#R-{{detalle.idReserva}}</span>
           <span class="estado ms-2" [class]="detalle.estadoReserva.toLowerCase()">{{detalle.estadoReserva}}</span>
         </div>
-        <button class="cerrar" (click)="detalle = null"><i class="bi bi-x-lg"></i></button>
+        <button class="cerrar" (click)="cerrarDetalle()"><i class="bi bi-x-lg"></i></button>
       </div>
 
       <p class="seccion">INFORMACIÓN DE LA RESERVA</p>
       <div class="row g-3 mb-4">
-        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-person"></i></span><div><small>Cliente</small><strong>{{detalle.nombre}}</strong></div></div></div>
+        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-person"></i></span><div><small>Cliente</small><strong>{{nombreCliente(detalle.idPersona)}}</strong></div></div></div>
         <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-person-vcard"></i></span><div><small>ID de persona</small><strong>{{detalle.idPersona}}</strong></div></div></div>
-        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-people"></i></span><div><small>Personas</small><strong>{{detalle.cantPersonas}} personas</strong></div></div></div>
+        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-people"></i></span><div><small>Personas</small><strong>{{detalle.cantidadPersonas}} personas</strong></div></div></div>
         <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-calendar3"></i></span><div><small>Fecha</small><strong>{{fechaCorta(detalle.fechaReserva)}}</strong></div></div></div>
         <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-clock"></i></span><div><small>Hora</small><strong>{{detalle.horaReserva}}</strong></div></div></div>
-        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-building"></i></span><div><small>Salón</small><strong>{{nombreSalon(detalle.idSalon)}}</strong></div></div></div>
+        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-building"></i></span><div><small>Salón</small><strong>{{nombreSalon(detalle.idMesa)}}</strong></div></div></div>
+        <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-grid-3x3-gap"></i></span><div><small>Mesa</small><strong>{{nombreMesa(detalle.idMesa)}}</strong></div></div></div>
         <div class="col-sm-4"><div class="dato"><span class="icono"><i class="bi bi-check-circle"></i></span><div><small>Motivo</small><strong>{{detalle.motivo || '-'}}</strong></div></div></div>
       </div>
 
+      <!-- PRODUCTOS: GET /api/reservas/{id}/detalles -->
+      <p class="seccion">PRODUCTOS</p>
+      <table class="tabla mb-4">
+        <thead><tr><th>Producto</th><th class="text-center">Cantidad</th><th class="text-end">Precio (S/)</th><th class="text-end">Subtotal (S/)</th></tr></thead>
+        <tbody>
+          @if (cargandoDetalles) {
+            <tr><td colspan="4" class="sin-datos py-3">Cargando productos...</td></tr>
+          } @else {
+            @for (d of detalles; track d.idDetalle) {
+              <tr>
+                <td>{{nombreProducto(d.idProducto)}}</td>
+                <td class="text-center">{{d.cantidad}}</td>
+                <td class="text-end">{{d.precioCompra | number:'1.2-2'}}</td>
+                <td class="text-end">{{d.subtotal | number:'1.2-2'}}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="sin-datos py-3">Sin productos</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+
       <p class="seccion">PAGOS REGISTRADOS</p>
       <table class="tabla mb-3">
-        <thead><tr><th>Tipo</th><th>Medio de pago</th><th>Fecha</th><th>Estado</th><th class="text-end">Monto (S/)</th></tr></thead>
+        <thead><tr><th>Tipo</th><th>Medio de pago</th><th>Fecha</th><th>Estado</th><th class="text-end">Monto (S/)</th><th class="text-end">Comprobante</th></tr></thead>
         <tbody>
           @for (p of pagosDe(detalle); track p.idPago) {
             <tr>
               <td>{{p.tipoComprobante === 'RESERVA' ? 'Pago de reserva' : (p.tipoComprobante || 'Pago')}}</td>
               <td>{{p.tipoPago === 'POR_DEFINIR' ? 'Por definir' : p.tipoPago}}</td>
               <td>{{fechaCorta(p.fechaPago)}}</td>
-              <td><span class="estado" [class]="p.estado === 'PAGADO' ? 'confirmado' : 'pendiente'">{{p.estado}}</span></td>
+              <td><span class="estado" [ngClass]="claseEstadoPago(p.estado)">{{p.estado}}</span></td>
               <td class="text-end">{{p.monto | number:'1.2-2'}}</td>
+              <td class="text-end text-nowrap">
+                @if (p.comprobante && (p.tipoPago === 'YAPE' || p.tipoPago === 'PLIN')) {
+                  <button class="accion me-1" title="Ver voucher" (click)="verComprobante(p)"><i class="bi bi-image"></i></button>
+                }
+                <!-- solo un comprobante POR_VERIFICAR se aprueba o rechaza (el backend tambien lo valida) -->
+                @if (p.estado === 'POR_VERIFICAR') {
+                  <button class="accion me-1" title="Aprobar voucher" [disabled]="procesandoPago" (click)="aprobarPago(p)"><i class="bi bi-check-lg"></i></button>
+                  <button class="accion" title="Rechazar voucher" [disabled]="procesandoPago" (click)="rechazarPago(p)"><i class="bi bi-x-lg"></i></button>
+                }
+              </td>
             </tr>
           } @empty {
-            <tr><td colspan="5" class="sin-datos py-3">Sin pagos registrados</td></tr>
+            <tr><td colspan="6" class="sin-datos py-3">Sin pagos registrados</td></tr>
           }
         </tbody>
       </table>
 
+      <!-- COMPROBANTE: imagen protegida, pedida con el token del ADMIN -->
+      @if (comprobanteUrl) {
+        <div class="text-center mb-3">
+          <p class="seccion">VOUCHER DEL PAGO #{{comprobanteDe}}</p>
+          <img [src]="comprobanteUrl" alt="Comprobante de pago" class="img-fluid rounded border" style="max-height: 420px;">
+        </div>
+      }
+
       <div class="row align-items-end">
         <div class="col-md-6">
-          <small class="texto-suave">El backend genera un pago de reserva de S/ 25 pendiente al registrar la reserva. Solo los pagos en estado PAGADO descuentan el saldo.</small>
+          <small class="texto-suave">El cliente adjunta el voucher de Yape o Plin al reservar (pago POR_VERIFICAR). Revisa la captura: si es válida, aprueba el pago y confirma la reserva; si no, recházalo y rechaza la reserva. Solo los pagos PAGADO descuentan el saldo.</small>
         </div>
         <div class="col-md-6">
           <div class="d-flex justify-content-between py-1"><span>Total de la reserva</span><strong>S/ {{detalle.total ?? 0 | number:'1.2-2'}}</strong></div>
@@ -190,7 +231,7 @@
       </div>
 
       <div class="d-flex justify-content-end gap-2 border-top pt-4 mt-4">
-        <button class="btn-claro" (click)="detalle = null">Cerrar</button>
+        <button class="btn-claro" (click)="cerrarDetalle()">Cerrar</button>
         <a class="btn-vimalu text-decoration-none" [routerLink]="['/reservas/editar', detalle.idReserva]"><i class="bi bi-pencil"></i> Editar reserva</a>
       </div>
     </div>

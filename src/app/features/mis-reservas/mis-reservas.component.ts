@@ -8,6 +8,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { AlertService } from '../../core/service/alert.service';
 import { ReservaMesaDTO } from '../../core/interfaces/reserva.interface';
 import { MesaNueva, SalonNuevo } from '../../core/interfaces/salon-mesa.interface';
+import { PagoService } from '../../core/services/pago.service';
+import { Pago } from '../../core/interfaces/pago.interface';
 
 //Consulta de las reservas del cliente autenticado (solo lectura)
 @Component({
@@ -22,6 +24,7 @@ export class MisReservasComponent implements OnInit {
   private mesaService = inject(MesaService);
   private salonService = inject(SalonService);
   private alertService = inject(AlertService);
+  private pagoService = inject(PagoService);
   public authService = inject(AuthService);
 
   reservas: ReservaMesaDTO[] = [];
@@ -31,6 +34,8 @@ export class MisReservasComponent implements OnInit {
   errorCarga = false;
   //reserva abierta en el modal de detalle
   detalle: ReservaMesaDTO | null = null;
+  //pago de separacion de S/ 25 por idReserva
+  pagos: Record<number, Pago | undefined> = {};
 
   ngOnInit(): void {
     //GET /api/reservas con el token: el backend filtra por la persona de la sesion
@@ -42,6 +47,7 @@ export class MisReservasComponent implements OnInit {
           .filter(r => r.idPersona === idPersona)
           .sort((a, b) => b.fechaReserva.localeCompare(a.fechaReserva));
         this.cargando = false;
+        this.cargarPagos();
       },
       error:()=>{
         this.cargando = false;
@@ -68,6 +74,34 @@ export class MisReservasComponent implements OnInit {
       case 'CONFIRMADO': return 'bg-success';
       case 'RECHAZADO': return 'bg-danger';
       case 'TERMINADO': return 'bg-secondary';
+      default: return 'bg-warning text-dark';
+    }
+  }
+
+  //pago de separacion de cada reserva (GET /api/pagos/reserva/{id}: el backend valida que sea suya)
+  cargarPagos(){
+    for(const r of this.reservas){
+      this.pagoService.getPagosDeReserva(r.idReserva!).subscribe({
+        next:(lista)=> this.pagos[r.idReserva!] = this.pagoService.separacion(lista),
+        error:()=> this.pagos[r.idReserva!] = undefined
+      });
+    }
+  }
+
+  textoPago(estado: string){
+    switch(estado){
+      case 'POR_VERIFICAR': return 'Por verificar';
+      case 'PAGADO': return 'Pagado';
+      case 'RECHAZADO': return 'Rechazado';
+      default: return 'Pendiente';
+    }
+  }
+
+  clasePago(estado: string){
+    switch(estado){
+      case 'PAGADO': return 'bg-success';
+      case 'RECHAZADO': return 'bg-danger';
+      case 'POR_VERIFICAR': return 'bg-info text-dark';
       default: return 'bg-warning text-dark';
     }
   }

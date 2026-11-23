@@ -23,7 +23,7 @@
           <thead class="bg-light">
             <tr>
               <th>ID</th><th>Fecha</th><th>Hora</th><th>Salón</th><th>Mesa</th>
-              <th class="text-center">Personas</th><th>Estado</th><th></th>
+              <th class="text-center">Personas</th><th>Estado</th><th>Pago</th><th></th>
             </tr>
           </thead>
           <tbody>
@@ -36,7 +36,15 @@
                 <td>{{nombreMesa(r.idMesa)}}</td>
                 <td class="text-center">{{r.cantidadPersonas}}</td>
                 <td><span class="badge" [ngClass]="claseEstado(r.estadoReserva)">{{r.estadoReserva}}</span></td>
-                <td class="text-end">
+                <!-- estado del pago de separacion (Yape/Plin) -->
+                <td>
+                  @if (pagos[r.idReserva!]; as pago) {
+                    <span class="badge" [ngClass]="clasePago(pago.estado)">{{textoPago(pago.estado)}}</span>
+                  } @else {
+                    <span class="text-muted small">-</span>
+                  }
+                </td>
+                <td class="text-end text-nowrap">
                   <button class="btn btn-outline-secondary btn-sm" (click)="verDetalle(r.idReserva!)">
                     <i class="bi bi-eye"></i> Ver detalle
                   </button>
@@ -74,6 +82,12 @@
         <div class="d-flex justify-content-between"><span>Total de la reserva</span><strong>S/ {{ (detalle.total ?? 0) | number:'1.2-2' }}</strong></div>
         <div class="d-flex justify-content-between"><span>Pagado</span><strong>S/ {{ (detalle.totalPagado ?? 0) | number:'1.2-2' }}</strong></div>
         <div class="d-flex justify-content-between mb-3"><span>Saldo pendiente</span><strong>S/ {{ (detalle.saldoPendiente ?? 0) | number:'1.2-2' }}</strong></div>
+        @if (pagos[detalle.idReserva!]; as pago) {
+          <div class="d-flex justify-content-between mb-3">
+            <span>Separación S/ 25 {{pago.tipoPago === 'YAPE' || pago.tipoPago === 'PLIN' ? '(' + pago.tipoPago + ')' : ''}}</span>
+            <span class="badge" [ngClass]="clasePago(pago.estado)">{{textoPago(pago.estado)}}</span>
+          </div>
+        }
 
         <!-- PRODUCTOS: el backend no ofrece al cliente un endpoint para consultarlos -->
         <h6 class="text-vimalu-primary border-top pt-3">Productos</h6>

@@ -1,0 +1,51 @@
+
+/* ===== Pago de separacion (Yape / Plin) ===== */
+.tarjeta-pago{
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border-top: 4px solid #C9A227;
+}
+.titulo-pago{
+  font-family: 'Playfair Display', serif;
+  color: #244A35;
+}
+.medio{
+  flex: 1;
+  padding: 10px;
+  border: 2px solid #244A35;
+  border-radius: 12px;
+  background: #fff;
+  color: #244A35;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+.medio:hover{ background: #FAF6EC; }
+.medio.activo{
+  background: #244A35;
+  color: #fff;
+  border-color: #C9A227;
+}
+.espacio-qr{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 12px;
+  border: 2px dashed #C9A227;
+  border-radius: 14px;
+  background: #FAF6EC;
+  color: #244A35;
+  text-align: center;
+}
+.espacio-qr i{ font-size: 2.5rem; color: #C9A227; }
+.espacio-qr small{ color: #6c757d; }
+.vista-previa{
+  display: block;
+  max-width: 100%;
+  max-height: 220px;
+  margin: 0 auto;
+  border-radius: 10px;
+  border: 1px solid #e5e0d2;
+}

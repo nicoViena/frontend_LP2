@@ -7,6 +7,6 @@ export interface Pago{
     tipoPago: string;
     comprobante: string | null;
     tipoComprobante: string | null;
-    //PENDIENTE o PAGADO
+    //PENDIENTE, POR_VERIFICAR, PAGADO o RECHAZADO
     estado: string;
 }

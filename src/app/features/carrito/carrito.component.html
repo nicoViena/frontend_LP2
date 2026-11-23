@@ -1,39 +1,9 @@
 <div class="container mt-5">
-  <!-- BARRA DE PROGRESO: paso 4 (Pago); al confirmar, todos los pasos quedan completados -->
-  <app-pasos-reserva [paso]="confirmada ? 5 : 4"></app-pasos-reserva>
+  <!-- BARRA DE PROGRESO: paso 4 (Pago); al confirmar se pasa a la pantalla de pago -->
+  <app-pasos-reserva [paso]="4"></app-pasos-reserva>
   <h2 class="text-vimalu-primary mb-4"><i class="bi bi-cart-fill"></i> Tu Carrito de Reserva</h2>
 
-  <!-- RESUMEN DE CONFIRMACION: datos devueltos por el backend -->
-  @if (confirmada && resumen) {
-    <div class="card border-0 shadow-sm">
-      <div class="card-body p-4">
-        <h4 class="text-vimalu-primary"><i class="bi bi-check-circle-fill text-success"></i> Reserva registrada</h4>
-        <p class="text-muted">Código de reserva: <strong>#R-{{confirmada.reserva.idReserva}}</strong> · Estado: <strong>{{confirmada.reserva.estadoReserva}}</strong></p>
-        <div class="row small mb-3">
-          <div class="col-6 col-md-3"><i class="bi bi-house-door"></i> {{resumen.nombreSalon}} · {{resumen.nombreMesa}}</div>
-          <div class="col-6 col-md-3"><i class="bi bi-calendar-event"></i> {{confirmada.reserva.fechaReserva}}</div>
-          <div class="col-6 col-md-3"><i class="bi bi-clock"></i> {{confirmada.reserva.horaReserva}}</div>
-          <div class="col-6 col-md-3"><i class="bi bi-people"></i> {{confirmada.reserva.cantidadPersonas}} personas</div>
-        </div>
-        @if (confirmada.detalles.length > 0) {
-          <p class="mb-1 fw-medium">Productos registrados: {{confirmada.detalles.length}}</p>
-        }
-        <div class="d-flex justify-content-between border-top pt-3">
-          <span>Total de la reserva</span>
-          <strong>S/ {{ (confirmada.reserva.total ?? 0) | number:'1.2-2' }}</strong>
-        </div>
-        <div class="d-flex justify-content-between">
-          <span>Saldo pendiente</span>
-          <strong>S/ {{ (confirmada.reserva.saldoPendiente ?? 0) | number:'1.2-2' }}</strong>
-        </div>
-        <small class="d-block text-muted mt-3">
-          <i class="bi bi-info-circle"></i> Se generó el pago inicial de S/ {{cartService.adelanto.toFixed(2)}} en estado PENDIENTE.
-          Aún no está pagado.
-        </small>
-        <a routerLink="/reserva" class="btn btn-primary mt-3">Hacer otra reserva</a>
-      </div>
-    </div>
-  } @else if (reserva) {
+  @if (reserva) {
     <div class="row">
       <!-- COLUMNA IZQUIERDA: RESERVA Y PRODUCTOS -->
       <div class="col-md-8">
@@ -114,8 +84,36 @@
         }
       </div>
 
-      <!-- COLUMNA DERECHA: RESUMEN DE RESERVA -->
+      <!-- COLUMNA DERECHA: PAGO DE SEPARACION Y RESUMEN -->
       <div class="col-md-4 mt-4 mt-md-0">
+        <!-- PAGO DE SEPARACION: S/ 25 con Yape o Plin; se envia junto con la reserva -->
+        <div class="tarjeta-pago mb-4">
+          <h5 class="titulo-pago">Pago de separación · S/ 25.00</h5>
+          <p class="small text-muted">Independiente del consumo. Adjunta la captura de tu voucher; un administrador la revisará.</p>
+
+          <div class="d-flex gap-2">
+            <button type="button" class="medio" [class.activo]="medio === 'YAPE'" (click)="medio = 'YAPE'">Yape</button>
+            <button type="button" class="medio" [class.activo]="medio === 'PLIN'" (click)="medio = 'PLIN'">Plin</button>
+          </div>
+
+          @if (medio) {
+            <!-- espacio para el QR y numero oficial de VIMALU (aun no disponibles) -->
+            <div class="espacio-qr mt-3">
+              <i class="bi bi-qr-code"></i>
+              <strong>QR y número de {{medio === 'YAPE' ? 'Yape' : 'Plin'}}</strong>
+              <small>Próximamente. Solicita los datos de pago a Hacienda VIMALU.</small>
+            </div>
+          }
+
+          <label class="form-label small fw-medium mt-3 mb-1">Captura del voucher de pago</label>
+          <input #archivoInput type="file" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp"
+            (change)="elegirArchivo(archivoInput)">
+          <small class="text-muted">JPG, PNG o WEBP, hasta 1 MB.</small>
+          @if (vistaPrevia) {
+            <img [src]="vistaPrevia" alt="Vista previa del comprobante" class="vista-previa mt-2">
+          }
+        </div>
+
         <div class="card border-0 shadow-sm bg-vimalu-primary text-white">
           <div class="card-body p-4">
             <h4 class="card-title mb-4">Resumen de Reserva</h4>
@@ -144,13 +142,16 @@
             </small>
 
             <!-- se desactiva mientras se espera la respuesta del backend -->
-            <button type="button" class="btn btn-light w-100 mt-4 fw-bold" (click)="confirmarReserva()" [disabled]="enviando">
+            <button type="button" class="btn btn-light w-100 mt-4 fw-bold" (click)="confirmarReserva()" [disabled]="enviando || !medio || !archivo">
               @if (enviando) {
                 <span class="spinner-border spinner-border-sm"></span> Registrando...
               } @else {
                 <i class="bi bi-check-circle"></i> Confirmar reserva
               }
             </button>
+            @if (!medio || !archivo) {
+              <small class="d-block opacity-75 mt-2">Elige Yape o Plin y adjunta la captura de tu voucher para confirmar.</small>
+            }
           </div>
         </div>
 
